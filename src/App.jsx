@@ -4,8 +4,8 @@ import Home from "./pages/Home";
 import Details from "./pages/Details";
 import Wishlist from "./pages/Wishlist"; // <== Əlavə et
 import Basket from "./pages/Basket";
-import SignIn from "./components/Signin";
 import SignUp from "./components/Signup";
+import Signin from "./components/Signin";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./toast.css";
@@ -25,7 +25,7 @@ function App() {
         <Route path="browse" element={<Browse />} />
       </Route>
 
-      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signin" element={<Signin />} />
       <Route path="/signup" element={<SignUp />} />
     </Routes>
      <ToastContainer toastClassName="custom-toast" position="top-right" autoClose={3000} theme="dark" />
