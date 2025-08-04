@@ -26,8 +26,8 @@ function App() {
         <Route path="browse" element={<Browse />} />
       </Route>
 
-      <Route path="/signin" element={<Signin />} />
-      <Route path="/signup" element={<Signup />} />
+      {/* <Route path="/signin" element={<Signin />} />
+      <Route path="/signup" element={<Signup />} /> */}
     </Routes>
      <ToastContainer toastClassName="custom-toast" position="top-right" autoClose={3000} theme="dark" />
      </>
