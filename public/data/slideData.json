@@ -1,0 +1,62 @@
+[
+  {
+    "id": "f48e98fd-24c2-420a-b686-0fcbbd4b14fa",
+    "title": "33 IMMORTALS",
+    "subtitle": "NEW UPDATE NOW LIVE",
+    "logo": "https://cdn2.unrealengine.com/egs-33-immortals-carousel-logo-white-2-350x100-59d0c17a9967.png",
+    "description": "33 Immortals gets new combat controls, improved perks, and more. Play now on the Epic Games Store.",
+    "price": "$8.99",
+    "image": "https://cdn2.unrealengine.com/33-immortals-static-1920x1080-72a23b08d99f.jpg",
+    "thumbnail": "https://cdn2.unrealengine.com/egs-33-immortals-carousel-thumb-v2-1200x1600-55f2dc1cf780.jpg?resize=1&w=96&h=128&quality=medium"
+  },
+  {
+    "id": "4a2166e5-24ab-4e94-bc40-5ed175da573a",
+    "title": "Destiny 2",
+    "subtitle": "EXPANSION AVAILABLE",
+    "logo": "https://cdn2.unrealengine.com/egs-destiny-2-edge-of-fate-carousel-logo-350x100-f0801d233eb9.png",
+    "description": "Explore new regions and defeat powerful foes in Destiny 2’s latest expansion.",
+    "price": "$27.99",
+    "image": "https://cdn2.unrealengine.com/egs-destiny-2-edge-of-fate-carousel-launch-1920x1080-e95123d4cf37.jpg?resize=1&w=854&h=480&quality=medium",
+    "thumbnail": "https://cdn2.unrealengine.com/egs-destiny-2-edge-of-fate-carousel-thumb-1200x1600-0b2dc48f612c.jpg?resize=1&w=96&h=128&quality=medium"
+  },
+  {
+    "id": "2c465a73-c77a-4a76-b241-4809c2422fd1",
+    "title": "Marvel Rivals",
+    "subtitle": "EARLY ACCESS",
+    "logo": "https://cdn2.unrealengine.com/egs-marvel-rivals-carousel-logo-350x141-d34127eafe14.png",
+    "description": "Team up with your favorite Marvel characters and dominate the battlefield.",
+    "price": "Free",
+    "image": "https://cdn2.unrealengine.com/egs-marvel-rivals-s3-carousel-desktop-1920x1080-80ea41a5913c.jpg?resize=1&w=854&h=480&quality=medium",
+    "thumbnail": "https://cdn2.unrealengine.com/egs-marvel-rivals-s3-carousel-thumb-1200x1600-a5f494ec5b7c.jpg?resize=1&w=96&h=128&quality=medium"
+  },
+  {
+    "id": "b50649f4-81bb-4280-be42-3215b06a0c85",
+    "title": "Summer Sale",
+    "subtitle": "LIMITED TIME OFFER",
+    "logo": "https://cdn2.unrealengine.com/en-summer-sale-carousel-logo-350x124-8071e34203c5.png",
+    "description": "Huge discounts on top games during our Summer Sale event. Don’t miss out!",
+    "price": "Varies",
+    "image": "https://cdn2.unrealengine.com/en-summer-sale-carousel-desktop-24f4636dfa43.avif?resize=1&w=854&h=480&quality=medium",
+    "thumbnail": "https://cdn2.unrealengine.com/en-summer-sale-carousel-thumbnail-1200x1600-8eefaa321d69.jpg?resize=1&w=96&h=128&quality=medium"
+  },
+  {
+    "id": "2e940c0c-47ce-4b92-876b-328d958e7886",
+    "title": "Zenless Zone Zero",
+    "subtitle": "COMING SOON",
+    "logo": "https://cdn2.unrealengine.com/egs-33-immortals-carousel-logo-white-2-350x100-59d0c17a9967.png",
+    "description": "A thrilling action RPG experience awaits you in Zenless Zone Zero. Prepare for the fight!",
+    "price": "Free",
+    "image": "https://cdn2.unrealengine.com/egs-zzz-2-1-carousel-dekstop-1920x1080-699594797ddb.jpg?resize=1&w=1280&h=720&quality=medium",
+    "thumbnail": "https://cdn2.unrealengine.com/en-egs-zzz-2-1-carousel-thumb-1200x1600-2efe586e98df.jpg?resize=1&w=96&h=128&quality=medium"
+  },
+  {
+    "id": "20d72f82-14ec-4c2e-bdb5-2ffbc1793662",
+    "title": "EA Sports FC 26",
+    "subtitle": "AVAILABLE NOW",
+    "logo": "https://cdn2.unrealengine.com/egs-fc-26-carousel-logo-350x100-afa7ea7a03b1.png",
+    "description": "Get ready for the ultimate football experience with EA Sports FC 26. Play now!",
+    "price": "$99.99",
+    "image": "https://cdn2.unrealengine.com/egs-fc-26-carousel-desktop-1248x702-cfdaed18f79f.jpg?resize=1&w=854&h=480&quality=medium",
+    "thumbnail": "https://cdn2.unrealengine.com/egs-fc-26-carousel-thumb-1200x1600-71788b9b4c30.jpg?resize=1&w=96&h=128&quality=medium"
+  }
+]

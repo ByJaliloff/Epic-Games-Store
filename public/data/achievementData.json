@@ -1,0 +1,35 @@
+[
+  {
+    "id": "e8a66e75-fa93-4390-8b32-197fd302e3b1",
+    "gameId": "ccbd738a-794e-4031-8e44-713468d4a7e6",
+    "title": "First Steps",
+    "description": "Complete the prologue chapter.",
+    "points": 10,
+    "icon": "https://icon-library.com/images/achievement-icon-png/achievement-icon-png-19.jpg",
+    "achievementHeaderImage": "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-g1c-00-1920x1080-cc2e0448df74.jpg?resize=1&w=480&h=270&quality=medium",
+    "secret": false,
+    "rarity": "15%"
+  },
+  {
+    "id": "8f8a66ec-c755-4eaa-8507-8f023252d1a2",
+    "gameId": "ccbd738a-794e-4031-8e44-713468d4a7e6",
+    "title": "Darkness Awaits",
+    "description": "Reach the Dark Place for the first time.",
+    "points": 20,
+    "icon": "https://icon-library.com/images/achievement-icon-png/achievement-icon-png-19.jpg",
+    "achievementHeaderImage": "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-g1c-00-1920x1080-cc2e0448df74.jpg?resize=1&w=480&h=270&quality=medium",
+    "secret": true,
+    "rarity": "1%"
+  },
+  {
+    "id": "fd10de9c-3192-4f05-8e3b-b8e2dbb8570f",
+    "gameId": "ccbd738a-794e-4031-8e44-713468d4a7e6",
+    "title": "Master Detective",
+    "description": "Solve all ritualistic murder cases.",
+    "points": 30,
+    "icon": "https://icon-library.com/images/achievement-icon-png/achievement-icon-png-19.jpg",
+    "achievementHeaderImage": "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-g1c-00-1920x1080-cc2e0448df74.jpg?resize=1&w=480&h=270&quality=medium",
+    "secret": false,
+    "rarity": "5%"
+  }
+]

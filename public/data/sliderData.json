@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "title": "33 IMMORTALS",
+    "subtitle": "NEW UPDATE NOW LIVE",
+    "description": "33 Immortals gets new combat controls, improved perks, and more. Play now on the Epic Games Store.",
+    "price": "$8.99",
+    "image": "/images/immortals.jpg",
+    "thumbnail": "/images/immortals-thumb.avif"
+  },
+  {
+    "id": 2,
+    "title": "Destiny 2",
+    "subtitle": "EXPANSION AVAILABLE",
+    "description": "Explore new regions and defeat powerful foes in Destiny 2’s latest expansion.",
+    "price": "Free",
+    "image": "/images/destiny2.avif",
+    "thumbnail": "/images/destiny2-thumbnaill.avif"
+  },
+  {
+    "id": 3,
+    "title": "Marvel Rivals",
+    "subtitle": "EARLY ACCESS",
+    "description": "Team up with your favorite Marvel characters and dominate the battlefield.",
+    "price": "$12.99",
+    "image": "/images/marvel.avif",
+    "thumbnail": "/images/marvel-thumbnail.avif"
+  },
+  {
+    "id": 4,
+    "title": "Summer Sale",
+    "subtitle": "LIMITED TIME OFFER",
+    "description": "Huge discounts on top games during our Summer Sale event. Don’t miss out!",
+    "price": "Varies",
+    "image": "/images/summer-sale.avif",
+    "thumbnail": "/images/summer-sale-thumb.avif"
+  },
+  {
+    "id": 5,
+    "title": "Zenless Zone Zero",
+    "subtitle": "COMING SOON",
+    "description": "A thrilling action RPG experience awaits you in Zenless Zone Zero. Prepare for the fight!",
+    "price": "TBA",
+    "image": "/images/zenless-zone-zero.avif",
+    "thumbnail": "/images/zenless-zone-zero-thumb.jpg"
+  },
+  {
+    "id": 6,
+    "title": "EA Sports FC 26",
+    "subtitle": "AVAILABLE NOW",
+    "description": "Get ready for the ultimate football experience with EA Sports FC 26. Play now!",
+    "price": "$59.99",
+    "image": "/images/ea-sports-fc26.avif",
+    "thumbnail": "/images/ea-sports-fc26-thumb.avif"
+  }
+]

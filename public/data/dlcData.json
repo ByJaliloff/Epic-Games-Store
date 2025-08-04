@@ -1,0 +1,32 @@
+[
+  {
+    "id": "44ecd0bf-b9ee-4b3c-8488-e11adfaf7c29",
+    "gameId": "ccbd738a-794e-4031-8e44-713468d4a7e6",
+    "title": "Alan Wake 2: Deluxe Upgrade",
+    "image": "https://cdn2.unrealengine.com/egs-alanwake2deluxeedition-remedyentertainment-editions-s1-2560x1440-ddf9b1f255e9.jpg?resize=1&w=480&h=270&quality=medium",
+    "description": "Unlock the Expansion Pass and exclusive cosmetic content with the Alan Wake 2 Deluxe Upgrade.",
+    "price": 14.60,
+    "discount": 60,
+    "type": "addon"
+  },
+  {
+    "id": "c8b4fbfa-7b4b-45e2-9a42-f46bf7c2a00c",
+    "gameId": "ccbd738a-794e-4031-8e44-713468d4a7e6",
+    "title": "Alan Wake 2 Deluxe Edition",
+    "image": "https://cdn2.unrealengine.com/egs-alanwake2deluxeedition-remedyentertainment-editions-s1-2560x1440-ddf9b1f255e9.jpg?resize=1&w=480&h=270&quality=medium",
+    "description": "Unlock the Expansion Pass and exclusive cosmetic content with the Alan Wake 2 Deluxe Edition.",
+    "price": 51.09,
+    "discount": 0,
+    "type": "edition"
+  },
+  {
+    "id": "b9fe40a0-e06e-4c2e-85eb-4ed5956a919b",
+    "gameId": "b602dc67-a455-4a89-827e-70149c5b3f4e",
+    "title": "Hades II Original Sountrack",
+    "image": "https://cdn1.epicgames.com/spt-assets/ea0a24395cd641d7bbde3e5d78ad462c/hades-ii-logo-1ig2h.png?resize=1&w=480&h=270&quality=medium",
+    "description": "The sequel to the god-like rogue-like dungeon crawler features an all-new pulse-pounding score from Supergiant's own Darren Korb.",
+    "price": 4.49,
+    "discount": 0,
+    "type": "addon"
+  }
+]

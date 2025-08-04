@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* CSS-də keyframes animasiyası */
+@keyframes slideProgress {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* Animasiya sinifi */
+.animate-slideProgress {
+  animation: slideProgress 7s linear forwards;
+  transform-origin: left; /* transform-origin: left */
+}
