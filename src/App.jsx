@@ -4,8 +4,8 @@ import Home from "./pages/Home";
 import Details from "./pages/Details";
 import Wishlist from "./pages/Wishlist"; // <== Əlavə et
 import Basket from "./pages/Basket";
-import Signup from "./components/Signup";
-import Signin from "./components/Signin";
+// import Signup from "./components/Signup";
+// import Signin from "./components/Signin";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./toast.css";
