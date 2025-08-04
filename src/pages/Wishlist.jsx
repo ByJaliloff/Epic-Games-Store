@@ -152,39 +152,39 @@ const addToCart = (item) => {
           ) : (
             <div className="space-y-6">
               {wishlist.map((item) => (
-<div
-  key={item.id}
-  className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative p-3 md:p-5 pb-10"
->
-  {/* Qiymət */}
-  <div className="absolute top-3 right-3 flex items-center gap-2 text-white font-semibold text-sm md:text-lg">
-    {item.price === "Free" ? (
-      <span className="text-[#0f0]">Free</span>
-    ) : item.discount ? (
-      <>
-        <span className="bg-[#26bbff] text-black px-1.5 py-0.5 rounded text-[11px] md:text-[12px]">
-          -{item.discount}%
-        </span>
-        <span className="line-through opacity-50 text-[12px] md:text-[14px]">
-          ${parseFloat(item.price).toFixed(2)}
-        </span>
-        <span className="text-sm md:text-base">
-          ${(item.price * (1 - item.discount / 100)).toFixed(2)}
-        </span>
-      </>
-    ) : (
-      <span>${parseFloat(item.price).toFixed(2)}</span>
-    )}
-  </div>
+      <div
+        key={item.id}
+        className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative p-3 md:p-5 md:pb-10"
+      >
+        {/* Qiymət */}
+        <div className="absolute top-3 right-3 flex items-center gap-2 text-white font-semibold text-sm md:text-lg">
+          {item.price === "Free" ? (
+            <span className="text-[#0f0]">Free</span>
+          ) : item.discount ? (
+            <>
+              <span className="bg-[#26bbff] text-black px-1.5 py-0.5 rounded text-[11px] md:text-[12px]">
+                -{item.discount}%
+              </span>
+              <span className="line-through opacity-50 text-[12px] md:text-[14px]">
+                ${parseFloat(item.price).toFixed(2)}
+              </span>
+              <span className="text-sm md:text-base">
+                ${(item.price * (1 - item.discount / 100)).toFixed(2)}
+              </span>
+            </>
+          ) : (
+            <span>${parseFloat(item.price).toFixed(2)}</span>
+          )}
+        </div>
 
-  {/* Şəkil */}
-  <Link to={`/details/${item.id}`} className="w-full md:w-[180px]">
-    <img
-      src={item.image}
-      alt={item.title}
-      className="w-full h-[200px] object-cover md:h-[250px] rounded-md"
-    />
-  </Link>
+        {/* Şəkil */}
+        <Link to={`/details/${item.id}`} className="w-full md:w-[180px]">
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-[200px] object-cover md:h-[250px] rounded-md"
+          />
+        </Link>
 
   {/* Məlumatlar */}
   <div className="flex-1 md:pl-5 mt-4 md:mt-0 flex flex-col justify-between">

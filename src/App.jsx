@@ -10,6 +10,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./toast.css";
 import Browse from "./pages/Browse";
+import ScrollToTop from "./ScrollToTop";
 
 
 
@@ -17,6 +18,7 @@ import Browse from "./pages/Browse";
 function App() {
   return (
     <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />

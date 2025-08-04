@@ -93,7 +93,7 @@ const ageRatingImages = {
               {cart.map((item) => (
               <div
                 key={item.id}
-                className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative p-3 md:p-5 pb-10"
+                className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative p-3 md:p-5 md:pb-10"
               >
                 {/* Price */}
                 <div className="absolute top-3 right-3 flex items-center gap-2 text-white font-semibold text-sm md:text-lg">
