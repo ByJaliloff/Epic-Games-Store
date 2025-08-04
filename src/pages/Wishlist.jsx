@@ -214,7 +214,24 @@ const addToCart = (item) => {
             </div>
           </div>
         </div>
+        
       )}
+        {/* Platform İkonları */}
+  {item.platforms && item.platforms.length > 0 && (
+    <div className="md:absolute md:bottom-3 md:left-3 flex gap-2 mt-4 md:mt-0">
+      {item.platforms.map((platform) =>
+        platformIcons[platform] ? (
+          <img
+            key={platform}
+            src={platformIcons[platform]}
+            alt={platform}
+            title={platform}
+            className="w-4 h-4"
+          />
+        ) : null
+      )}
+    </div>
+  )}
     </div>
 
     {/* Əməliyyatlar */}
@@ -246,23 +263,6 @@ const addToCart = (item) => {
       )}
     </div>
   </div>
-
-  {/* Platform İkonları */}
-  {item.platforms && item.platforms.length > 0 && (
-    <div className="absolute bottom-3 left-3 flex gap-2">
-      {item.platforms.map((platform) =>
-        platformIcons[platform] ? (
-          <img
-            key={platform}
-            src={platformIcons[platform]}
-            alt={platform}
-            title={platform}
-            className="w-4 h-4"
-          />
-        ) : null
-      )}
-    </div>
-  )}
 </div>
 
               ))}

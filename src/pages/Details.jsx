@@ -426,7 +426,7 @@ const addToWishlist = () => {
             <button
               type="button"
               onClick={() => navigate("/wishlist")}
-              className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md"
+              className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
             >
               View in Wishlist
             </button>
@@ -434,7 +434,7 @@ const addToWishlist = () => {
             <button
               type="button"
               onClick={addToWishlist}
-              className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md"
+              className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
             >
               Add to Wishlist
             </button>

@@ -45,13 +45,7 @@ export function GameProvider({ children }) {
     fetchData();
   }, []);
 
-  // Səbətdən silmək funksiyası
-  const removeFromCart = (id) => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const updatedCart = cart.filter((item) => item.id !== id);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    window.location.reload();
-  };
+
 
   // Səbətdən istəyə köçürmək funksiyası
   const moveToWishlist = (item) => {
@@ -80,7 +74,6 @@ export function GameProvider({ children }) {
         slides,
         loading,
         error,
-        removeFromCart,
         moveToWishlist,
       }}
     >

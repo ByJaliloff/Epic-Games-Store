@@ -1,13 +1,41 @@
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { GameContext } from "../context/DataContext";
 import SearchNav from "../components/SearchNav";
+import { toast } from "react-toastify";
 
 export default function Basket() {
-  const { removeFromCart, moveToWishlist, } = useContext(GameContext);
+  const {  moveToWishlist, } = useContext(GameContext);
   const navigate = useNavigate();
+  const [cart, setCart] = useState(() => {
+  return JSON.parse(localStorage.getItem("cart")) || [];
+});
 
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const removeFromCart = (item) => {
+  setCart(prevCart => {
+    const updatedCart = prevCart.filter(p => String(p.id) !== String(item.id));
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+    // Toast bildirimi
+    toast.info(
+      <div className="flex items-center gap-3">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="w-10 h-10 object-cover rounded"
+        />
+        <div>
+          <p className="text-white font-semibold">{item.title}</p>
+          <p className="text-gray-300 text-sm">Removed from cart</p>
+        </div>
+      </div>
+    );
+
+    return updatedCart;
+  });
+};
+
+
 
         const totalPrice = Array.isArray(cart)
         ? cart.reduce((total, item) => {
@@ -134,23 +162,6 @@ const ageRatingImages = {
                       {item.title}
                     </h2>
 
-                    {/* Platforms */}
-                    {item.platforms && item.platforms.length > 0 && (
-                      <div className="absolute bottom-3 left-3 flex gap-2">
-                        {item.platforms.map((platform) =>
-                          platformIcons[platform] ? (
-                            <img
-                              key={platform}
-                              src={platformIcons[platform]}
-                              alt={platform}
-                              title={platform}
-                              className="w-4 h-4"
-                            />
-                          ) : null
-                        )}
-                      </div>
-                    )}
-
                     {/* Age Rating */}
                     {item.ageRating && (
                       <div className="flex items-center gap-3 bg-[#202024] p-2 md:p-3 rounded-md border border-gray-500 hover:border-white mb-3">
@@ -169,12 +180,28 @@ const ageRatingImages = {
                         </div>
                       </div>
                     )}
+                                        {/* Platforms */}
+                    {item.platforms && item.platforms.length > 0 && (
+                      <div className="md:absolute md:bottom-3 md:left-3 flex gap-2 mt-4 md:mt-0">
+                        {item.platforms.map((platform) =>
+                          platformIcons[platform] ? (
+                            <img
+                              key={platform}
+                              src={platformIcons[platform]}
+                              alt={platform}
+                              title={platform}
+                              className="w-4 h-4"
+                            />
+                          ) : null
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
                   <div className="mt-4 flex flex-col md:flex-row gap-3 justify-end">
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item)}
                       className="text-[#ffffffa6] font-semibold hover:text-white transition text-[14px] text-left md:text-right"
                     >
                       Remove
