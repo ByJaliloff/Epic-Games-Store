@@ -482,7 +482,8 @@ const addToWishlist = () => {
     {relatedDlcs.length === 0 ? (
       <p className="text-gray-400">No add-ons or editions found for this game.</p>
     ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 min-[375px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
+
         {relatedDlcs.map((dlcItem) => (
           <GameCard key={dlcItem.id} game={dlcItem} />
         ))}

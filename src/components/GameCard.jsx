@@ -92,7 +92,7 @@ const handleWishlist = (e) => {
 
   const CardContent = (
   <div
-    className="bg-[#101014] rounded-2xl overflow-hidden transition duration-300 group cursor-pointer shadow hover:shadow-lg"
+    className="bg-[#101014] rounded-2xl overflow-hidden transition duration-300 group cursor-pointer shadow hover:shadow-lg w-full max-w-[180px] sm:max-w-none"
     onClick={() =>
       game.type === "basedgame" ? null : handleAddToCartAndNavigate()
     }
@@ -171,13 +171,11 @@ const handleWishlist = (e) => {
 
 
   return game.type === "basedgame" ? (
-    <Link
-      to={`/details/${game.id}`}
-      className="bg-[#202020] rounded-2xl overflow-hidden transition duration-300 group"
-    >
-      {CardContent}
-    </Link>
-  ) : (
-    CardContent
-  );
+  <Link to={`/details/${game.id}`}>
+    {CardContent}
+  </Link>
+) : (
+  CardContent
+);
+
 }
