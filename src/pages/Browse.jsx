@@ -19,6 +19,8 @@ export default function Browse() {
     platforms: [],
     price: null,
   });
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
 
   const combined = useMemo(() => [...games, ...dlcs], [games, dlcs]);
 
@@ -46,6 +48,19 @@ export default function Browse() {
     const next = highlightStart + direction * cardsPerPage;
     setHighlightStart(Math.max(0, Math.min(next, max)));
   };
+  useEffect(() => {
+  if (isMobileFilterOpen) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+
+  // Cleanup edək modal bağlananda
+  return () => {
+    document.body.style.overflow = "auto";
+  };
+}, [isMobileFilterOpen]);
+
 
   useEffect(() => {
     const newQuery = (new URLSearchParams(location.search).get("q") || "").toLowerCase();
@@ -121,10 +136,9 @@ export default function Browse() {
   return (
     <>
       <SearchNav />
-
       <div className="bg-[#0f0f10] min-h-screen text-white py-6">
         {!shouldHideHighlight && (
-          <div className="max-w-[82%] mx-auto px-[3.5%] py-8">
+          <div className="w-[95%] md:w-[95%] lg:w-[93%] xl:w-[90%] 2xl:w-[82%] mx-auto px-[3.5%] py-8">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-[32px] font-extrabold">Popular Genres</h2>
               <div className="flex gap-2">
@@ -145,65 +159,74 @@ export default function Browse() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              {popularTags.slice(highlightStart, highlightStart + cardsPerPage).map((label) => {
-                // Eyni oyunların təkrarını istəmiriksə, Map ilə unikal oyunlar
-                const relatedGames = Array.from(
-                  new Map(
-                    combined
-                      .filter(
-                        (g) =>
-                          (Array.isArray(g.genre) && g.genre.includes(label)) ||
-                          (Array.isArray(g.features) && g.features.includes(label))
-                      )
-                      .map((g) => [g.id, g])
-                  ).values()
-                ).slice(0, 3);
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide mb-10 px-1">
+                {popularTags.slice(highlightStart, highlightStart + cardsPerPage).map((label) => {
+                  const relatedGames = Array.from(
+                    new Map(
+                      combined
+                        .filter(
+                          (g) =>
+                            (Array.isArray(g.genre) && g.genre.includes(label)) ||
+                            (Array.isArray(g.features) && g.features.includes(label))
+                        )
+                        .map((g) => [g.id, g])
+                    ).values()
+                  ).slice(0, 3);
 
-                return (
-                  <div
-                    key={label}
-                    onClick={() => {
-                      setFilters({
-                        genre: combined.some((g) => Array.isArray(g.genre) && g.genre.includes(label)) ? [label] : [],
-                        features: combined.some((g) => Array.isArray(g.features) && g.features.includes(label)) ? [label] : [],
-                        type: [],
-                        platforms: [],
-                        price: null,
-                      });
-                      setShouldHideHighlight(true);
-                    }}
-                    className="cursor-pointer bg-[#1e1e1e] h-[230px] hover:bg-[#2a2a2a] transition p-4 rounded-xl shadow-md flex flex-col justify-between"
-                  >
-                    <div className="relative h-[144px] mb-4 flex items-center justify-center">
-                      <img
-                        src={relatedGames[0]?.image}
-                        alt={relatedGames[0]?.title}
-                        className="h-[120px] w-[40%] object-cover rounded absolute left-[10%] top-1/2 -translate-y-1/2 brightness-50 shadow-lg z-0"
-                      />
-                      <img
-                        src={relatedGames[1]?.image}
-                        alt={relatedGames[1]?.title}
-                        className="h-[120px] w-[40%] object-cover rounded absolute right-[10%] top-1/2 -translate-y-1/2 brightness-50 shadow-lg z-0"
-                      />
-                      <img
-                        src={relatedGames[2]?.image}
-                        alt={relatedGames[2]?.title}
-                        className="h-[144px] w-[50%] object-cover rounded shadow-2xl z-10 relative"
-                      />
-                    </div>
+                  return (
+                    <div
+                      key={label}
+                      onClick={() => {
+                        setFilters({
+                          genre: combined.some((g) => Array.isArray(g.genre) && g.genre.includes(label)) ? [label] : [],
+                          features: combined.some((g) => Array.isArray(g.features) && g.features.includes(label)) ? [label] : [],
+                          type: [],
+                          platforms: [],
+                          price: null,
+                        });
+                        setShouldHideHighlight(true);
+                      }}
+                      className="min-w-[260px] max-w-[300px] flex-shrink-0 cursor-pointer bg-[#1e1e1e] h-[230px] hover:bg-[#2a2a2a] transition p-4 rounded-xl shadow-md flex flex-col justify-between"
+                    >
+                      <div className="relative h-[144px] mb-4 flex items-center justify-center">
+                        <img
+                          src={relatedGames[0]?.image}
+                          alt={relatedGames[0]?.title}
+                          className="h-[120px] w-[40%] object-cover rounded absolute left-[10%] top-1/2 -translate-y-1/2 brightness-50 shadow-lg z-0"
+                        />
+                        <img
+                          src={relatedGames[1]?.image}
+                          alt={relatedGames[1]?.title}
+                          className="h-[120px] w-[40%] object-cover rounded absolute right-[10%] top-1/2 -translate-y-1/2 brightness-50 shadow-lg z-0"
+                        />
+                        <img
+                          src={relatedGames[2]?.image}
+                          alt={relatedGames[2]?.title}
+                          className="h-[144px] w-[50%] object-cover rounded shadow-2xl z-10 relative"
+                        />
+                      </div>
 
-                    <div className="flex items-center justify-center mb-2 pt-2">
-                      <h3 className="text-base font-semibold">{label} Games</h3>
+                      <div className="flex items-center justify-center mb-2 pt-2">
+                        <h3 className="text-base font-semibold">{label} Games</h3>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+
           </div>
         )}
 
-        <div className="max-w-[82%] mx-auto px-[3.5%]">
+        <div className="w-[95%] md:w-[95%] lg:w-[93%] xl:w-[90%] 2xl:w-[82%] mx-auto px-[3.5%]">
+          <div className="sm:hidden flex justify-end mb-4">
+            <button
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="bg-[#1e1e1e] text-white px-4 py-2 rounded-lg shadow border border-white/10"
+            >
+              Filters
+            </button>
+          </div>
+
           <div className="flex gap-8">
             <div className="flex-1">
               {filtered.length === 0 ? (
@@ -219,7 +242,7 @@ export default function Browse() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filtered.map((game) => (
                     <GameCard key={game.id} game={game} />
                   ))}
@@ -227,15 +250,55 @@ export default function Browse() {
               )}
             </div>
 
-            <div className="w-[250px] sticky top-24">
-              <FilterPanel
-                filters={filters}
-                onFilterChange={setFilters}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onFilterStatusChange={setShouldHideHighlight}
-              />
-            </div>
+            <div className="w-[250px] sticky top-24 hidden md:block">
+                <FilterPanel
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  onFilterStatusChange={setShouldHideHighlight}
+                />
+              </div>
+              {isMobileFilterOpen && (
+  <div className="fixed inset-0 z-55 bg-[#18181C] bg-opacity-50 flex justify-center items-center">
+     <div className="w-full h-full bg-[#18181C] p-6 overflow-y-auto">
+      <FilterPanel
+        filters={filters}
+        onFilterChange={setFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFilterStatusChange={setShouldHideHighlight}
+      />
+
+      <div className="flex justify-evenly mt-6 gap-2">
+        <button
+          className="w-[116px] h-[48px]  bg-[#18181C] border border-white/10 text-white  rounded"
+          onClick={() => {
+            setFilters({
+              genre: [],
+              features: [],
+              type: [],
+              platforms: [],
+              price: null,
+            });
+            setSearchQuery("");
+            setIsMobileFilterOpen(false);
+          }}
+        >
+          Clear
+        </button>
+        <button
+          className="w-[116px] h-[48px]  bg-[#26BBFF] text-black font-semibold  rounded"
+          onClick={() => setIsMobileFilterOpen(false)}
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
           </div>
         </div>
       </div>

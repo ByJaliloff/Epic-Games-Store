@@ -91,75 +91,87 @@ const handleWishlist = (e) => {
 
 
   const CardContent = (
-    <div
-      className="bg-[#101014] rounded-2xl overflow-hidden transition duration-300 group cursor-pointer shadow hover:shadow-lg"
-      onClick={() =>
-        game.type === "basedgame" ? null : handleAddToCartAndNavigate()
-      }
-    >
-      <div className="relative">
-        <img
-          src={game.image}
-          alt={game.title}
-          className="w-full h-[260px] object-cover"
-        />
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="relative group/icon">
-            <div
-              className="w-9 h-9 rounded-full backdrop-blur-md bg-white/20 flex items-center justify-center hover:bg-white/30 cursor-pointer"
-              onClick={handleWishlist}
-            >
-              <img
-                src={
-                  isInWishlist
-                    ? "/icons/check.png"
-                    : "/icons/wishlist5.png"
-                }
-                alt="wishlist"
-                className="w-6 h-6"
-              />
-            </div>
-            <div className="absolute top-10 right-0 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300 z-10">
-              {isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-            </div>
+  <div
+    className="bg-[#101014] rounded-2xl overflow-hidden transition duration-300 group cursor-pointer shadow hover:shadow-lg"
+    onClick={() =>
+      game.type === "basedgame" ? null : handleAddToCartAndNavigate()
+    }
+  >
+    <div className="relative">
+      <img
+        src={game.image}
+        alt={game.title}
+        className="w-full h-[full] object-cover"
+      />
+      {/* Wishlist Button */}
+      <div
+        className={`
+          absolute top-2 right-2
+          transition-opacity duration-300
+          sm:opacity-0 sm:group-hover:opacity-100 
+          opacity-100
+        `}
+      >
+        <div className="relative group/icon">
+          <div
+            className="w-9 h-9 rounded-full backdrop-blur-md bg-white/20 flex items-center justify-center hover:bg-white/30 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation(); // prevent parent onClick
+              handleWishlist();
+            }}
+          >
+            <img
+              src={
+                isInWishlist ? "/icons/check.png" : "/icons/wishlist5.png"
+              }
+              alt="wishlist"
+              className="w-6 h-6"
+            />
+          </div>
+
+          {/* Tooltip — only visible on desktop */}
+          <div className="hidden sm:block absolute top-10 right-0 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300 z-10">
+            {isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
           </div>
         </div>
       </div>
+    </div>
 
-      <div className="p-4 flex flex-col justify-between h-[140px]">
-        <div>
-          <p className="text-[#ffffffa6] text-[12px] font-semibold mb-1">
-            {typeMapping[game.type] || game.type}
-          </p>
-          <h2 className="text-[#fff] font-bold text-[15px] mb-2 line-clamp-2 leading-tight">
-            {game.title}
-          </h2>
-        </div>
+    <div className="p-4 flex flex-col justify-between h-[140px]">
+      <div>
+        <p className="text-[#ffffffa6] text-[12px] font-semibold mb-1">
+          {typeMapping[game.type] || game.type}
+        </p>
+        <h2 className="text-[#fff] font-bold text-[15px] mb-2 line-clamp-2 leading-tight">
+          {game.title}
+        </h2>
+      </div>
 
-        <div>
-          {isFree ? (
-            <p className="text-[#0f0] font-semibold text-[15px]">Free</p>
-          ) : isDiscounted ? (
-            <div className="flex items-center gap-2">
-              <span className="bg-blue-600 text-white text-[12px] px-2 py-0.5 rounded">
-                -{game.discount}%
-              </span>
-              <span className="line-through text-[#888] text-[13px]">
-                ${price.toFixed(2)}
-              </span>
-              <span className="text-[#fff] text-[14px] font-semibold">
-                ${discountedPrice}
-              </span>
-            </div>
-          ) : (
-            <p className="text-[#fff] text-[14px] font-semibold">
+      <div>
+        {isFree ? (
+          <p className="text-[#0f0] font-semibold text-[15px]">Free</p>
+        ) : isDiscounted ? (
+          <div className="flex items-center gap-2">
+            <span className="bg-blue-600 text-white text-[12px] px-2 py-0.5 rounded">
+              -{game.discount}%
+            </span>
+            <span className="line-through text-[#888] text-[13px]">
               ${price.toFixed(2)}
-            </p>
-          )}
-        </div>
+            </span>
+            <span className="text-[#fff] text-[14px] font-semibold">
+              ${discountedPrice}
+            </span>
+          </div>
+        ) : (
+          <p className="text-[#fff] text-[14px] font-semibold">
+            ${price.toFixed(2)}
+          </p>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
+
 
   return game.type === "basedgame" ? (
     <Link
