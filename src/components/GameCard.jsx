@@ -115,10 +115,7 @@ const handleWishlist = (e) => {
         <div className="relative group/icon">
           <div
             className="w-9 h-9 rounded-full backdrop-blur-md bg-white/20 flex items-center justify-center hover:bg-white/30 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation(); // prevent parent onClick
-              handleWishlist();
-            }}
+            onClick={(e) => handleWishlist(e)}
           >
             <img
               src={
