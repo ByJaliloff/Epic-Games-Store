@@ -107,7 +107,7 @@ const resetFilters = () => {
   ];
 
   return (
-  <div className="w-[250px] text-sm space-y-4 py-5 px-3">
+  <div className="w-[250px] mx-auto  text-sm space-y-4 py-5 px-3">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">
           Filters

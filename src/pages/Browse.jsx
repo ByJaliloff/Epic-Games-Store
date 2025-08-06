@@ -259,8 +259,9 @@ export default function Browse() {
                   onFilterStatusChange={setShouldHideHighlight}
                 />
               </div>
-              {isMobileFilterOpen && (
-  <div className="fixed inset-0 z-55 bg-[#18181C] bg-opacity-50 flex justify-center items-center">
+              
+{isMobileFilterOpen && (
+  <div className="fixed inset-0 z-100 bg-[#18181C] bg-opacity-50 flex justify-center items-center">
      <div className="w-full h-full bg-[#18181C] p-6 overflow-y-auto">
       <FilterPanel
         filters={filters}
@@ -297,7 +298,6 @@ export default function Browse() {
     </div>
   </div>
 )}
-
 
           </div>
         </div>
