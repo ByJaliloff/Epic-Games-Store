@@ -11,6 +11,9 @@ import "react-toastify/dist/ReactToastify.css";
 import "./toast.css";
 import Browse from "./pages/Browse";
 import ScrollToTop from "./ScrollToTop";
+import AdminPanel from "./pages/AdminPanel";
+import AdminLayout from "./layout/AdminLayout";
+import NewsSection from "./pages/NewsSection";
 
 
 
@@ -26,8 +29,11 @@ function App() {
         <Route path="wishlist" element={<Wishlist />} /> {/* Yeni route */}
         <Route path="basket" element={<Basket />} />
         <Route path="browse" element={<Browse />} />
+        <Route path="news" element={<NewsSection />} />
       </Route>
-
+        <Route path="/" element={<AdminLayout />}>
+        <Route path="admin" element={<AdminPanel />} />
+      </Route>
       {/* <Route path="/signin" element={<Signin />} />
       <Route path="/signup" element={<Signup />} /> */}
     </Routes>

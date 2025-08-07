@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "title": "Get some sun and grab some games: The Epic Games Store Summer Sale buyer’s guide",
+    "description": "Prepare for the 2025 Summer Sale in the Epic Games Store with our buyer’s guide. Discover top deals on games, information on sale dates, Epic Rewards, and more!",
+    "date": "21d ago",
+    "image": "https://cdn2.unrealengine.com/summer-sale-blog-key-1920x1080-24f16148a9a3.jpg?resize=1&w=854&h=480&quality=medium",
+    "link": "#"
+  },
+  {
+    "id": 2,
+    "title": "Wuchang: Fallen Feathers brings color to the muted Soulslike genre",
+    "description": "What really sets Wuchang: Fallen Feathers apart is how everything in the game is connected through a cultural lens that’s deeply personal to the team.",
+    "date": "24d ago",
+    "image": "https://cdn2.unrealengine.com/4-1920x1080-a4211496a5aa.jpg?resize=1&w=854&h=480&quality=medium",
+    "link": "#"
+  },
+  {
+    "id": 3,
+    "title": "Why QuakeCon remains a gibatastically good time after almost 30 years",
+    "description": "No other LAN party has ever got quite this out of hand.",
+    "date": "6h ago",
+    "image": "https://cdn2.unrealengine.com/why-quakecon-remains-a-gibtasticly-good-time-after-almost-30-years-1920x1080-b837babf9ba1.jpg?resize=1&w=480&h=270&quality=medium",
+    "link": "#"
+  },
+  {
+    "id": 4,
+    "title": "112 Operator is free this week on the Epic Games Store for mobile",
+    "description": "Manage riots, handle natural disasters, and become an emergency services hero in 112 Operator, free this week on the Epic Games Store for mobile.",
+    "date": "7h ago",
+    "image": "/images/112-operator.jpg",
+    "link": "#"
+  },
+  {
+    "id": 5,
+    "title": "Shadowverse: Worlds Beyond beginners guide: 9 tips to get the most out of this anime CCG",
+    "description": "Get free cards, build the best deck, and unleash evolutions to overwhelm your opponents.",
+    "date": "8h ago",
+    "image": "/images/shadowverse.jpg",
+    "link": "#"
+  }
+]
