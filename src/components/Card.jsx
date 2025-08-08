@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Loader from "./Loader";
+import Error from "../pages/Error";
 
 
 function Card( {games, dlcs, loading, error}) {
@@ -122,8 +124,8 @@ const handleWishlist = (item, e) => {
 
   };
 
-  if (loading) return <p className="text-white">Loading...</p>;
-  if (error) return <p className="text-red-500">Xəta baş verdi: {error}</p>;
+  if (loading) return <Loader />
+  if (error) return <Error />
 
   const handleSlide = (type, direction) => {
     setStartIndexes((prev) => {
@@ -255,7 +257,7 @@ const Section = ({ title, type }) => {
 
   return (
     <div className="py-8">
-     <div className="max-w-[90%] sm:max-w-[75%] mx-auto flex items-center justify-between mb-6">
+     <div className="max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[83%] xl:max-w-[75%] mx-auto flex items-center justify-between mb-6">
         <h2 className="text-[#fff] text-[20px] font-bold group transition-all flex items-center">
           {title}
           <span className="ml-1 flex items-center">
@@ -292,7 +294,7 @@ const Section = ({ title, type }) => {
         </div>
       </div>
 
-      <div className="max-w-[90%] sm:max-w-[75%] mx-auto">
+      <div className="max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[83%] xl:max-w-[75%] mx-auto">
         {isMobile
           ? renderCards(filtered[type], type, true)
           : renderCards(
@@ -314,7 +316,15 @@ const Section = ({ title, type }) => {
 
 
   return (
-    <div className={`w-full md:w-1/3 p-4 ${index < 2 ? "md:border-r md:border-gray-500" : ""}`}>
+    <div
+  className={`
+    p-0
+    2xl:p-4 
+    ${index !== 2 && "lg:border-r lg:border-gray-500"} 
+    ${index % 2 === 0 && "sm:border-r sm:border-gray-500 lg:border-0"}
+  `}
+>
+
       <h2 className="text-white text-[20px] font-bold mb-4 flex items-center gap-2">
         {title} <span className="text-gray-400 text-sm">{'>'}</span>
       </h2>
@@ -362,7 +372,7 @@ const Section = ({ title, type }) => {
                   {/* Info */}
                   <div
                         onClick={() => navigate(`/details/${item.id}`)}
-                        className="flex flex-col text-white pr-6"
+                        className="flex flex-col text-white"
                       >
                         <span className="font-semibold text-base line-clamp-1">{item.title}</span>
 
@@ -404,11 +414,12 @@ const Section = ({ title, type }) => {
       <Section title="Discover Something" type="discover" />
       <Section title="Summer Sale Spotlight" type="sale" />
       
-    <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row gap-4 mt-8">
+    <div className="max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[83%] xl:max-w-[75%] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
       <SectionStatic title="New Releases" type="new" index={0} />
       <SectionStatic title="Top Player Rated" type="top" index={1} />
       <SectionStatic title="Coming Soon" type="upcoming" index={2} />
-   </div>
+    </div>
+
       <Section title="Top Free Games" type="free" />
       <Section title="Editions & Addons" type="edition" />
   </div>

@@ -5,14 +5,19 @@ import ReactPlayer from "react-player";
 import SearchNav from "../components/SearchNav";
 import GameCard from "../components/GameCard";
 import { toast } from "react-toastify";
+import Error from "./Error";
 
 
 function Details() {
   const { id } = useParams();
-  const { games, dlcs } = useContext(GameContext);
+  const { games, dlcs, error } = useContext(GameContext);
+   if (error) return <Error />;
   const navigate = useNavigate();
 
+
   const game = games.find((g) => g.id === id);
+   if (!game) return <Error />;
+
 
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
   const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];

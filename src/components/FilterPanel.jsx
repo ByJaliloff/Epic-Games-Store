@@ -22,7 +22,7 @@ export default function FilterPanel({ onFilterChange, searchQuery, onSearchChang
 
   const typeMapping = {
   basedgame: "Base Game",
-  editor: "Edtor",
+  editor: "Editor",
   demo: "Demo",
   edition: "Edition",
   addon: "Addon",

@@ -4,6 +4,7 @@ import SearchNav from "../components/SearchNav";
 import Slider from "../components/Slider";
 import { GameContext } from "../context/DataContext";
 import { useContext } from "react";
+import Error from "./Error";
 
 export default function Home() {
 
@@ -11,7 +12,7 @@ export default function Home() {
   const { slides, games, dlcs, loading, error } = useContext(GameContext);
 
   if (loading) return <Loader />
-  if (error) return <p>Error: {error}</p>; 
+  if (error) return <Error />
 
 
   return (

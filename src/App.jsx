@@ -18,6 +18,7 @@ import HomeAdminPanel from "./pages/HomeAdminPanel";
 import NewsAdminPanel from "./pages/NewsAdminPanel";
 import DlcAdminPanel from "./pages/DlcAdminPanel";
 import GamesAdminPanel from "./pages/GamesAdminPanel";
+import Error from "./pages/Error";
 
 
 
@@ -34,6 +35,7 @@ function App() {
         <Route path="basket" element={<Basket />} />
         <Route path="browse" element={<Browse />} />
         <Route path="news" element={<NewsSection />} />
+        <Route path="*" element={<Error />} />
       </Route>
        <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<HomeAdminPanel />} />
@@ -44,8 +46,10 @@ function App() {
       </Route>
       {/* <Route path="/signin" element={<Signin />} />
       <Route path="/signup" element={<Signup />} /> */}
+      
     </Routes>
      <ToastContainer toastClassName="custom-toast" position="top-right" autoClose={3000} theme="dark" />
+     
      </>
   );
 }
