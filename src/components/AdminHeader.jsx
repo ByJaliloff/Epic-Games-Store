@@ -1,24 +1,26 @@
-import React, { useState } from 'react'
-import { FaGamepad } from 'react-icons/fa'
+import { useState } from 'react'
+import { FaGamepad, FaRegNewspaper } from 'react-icons/fa'
 import { IoMenu, IoClose } from 'react-icons/io5'
 import {  MdSendTimeExtension } from 'react-icons/md'
-import { TbUniverse } from 'react-icons/tb'
 import { TfiLayoutSlider } from "react-icons/tfi";
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router-dom'
+
+
 
 function AdminHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
+  const location = useLocation();
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
   const menuItems = [
-    { name: 'Slider', icon: <TfiLayoutSlider  size={20} /> },
-    { name: 'Universe', icon: <TbUniverse  size={20} /> },
-    { name: 'Games', icon: <FaGamepad  size={20} /> },
-    { name: 'DLCs', icon: <MdSendTimeExtension  size={20} /> }
-  ]
+    { name: 'Slider', path: '/admin/slider', icon: <TfiLayoutSlider size={20} /> },
+    { name: 'News', path: '/admin/news', icon: <FaRegNewspaper size={20} /> },
+    { name: 'Games', path: '/admin/games', icon: <FaGamepad size={20} /> },
+    { name: 'DLCs', path: '/admin/dlcs', icon: <MdSendTimeExtension size={20} /> }
+  ];
+
 
   return (
     <>
@@ -35,47 +37,54 @@ function AdminHeader() {
             </button>
 
             {/* Logo */}
-            <div className="relative group w-[60px] h-[60px] flex items-center justify-center">
+            <Link to="/">
+              <div className="relative group w-[60px] h-[60px] flex items-center justify-center">
                 <div className="absolute inset-0 rounded-lg blur-md opacity-40 group-hover:opacity-70 transition duration-500 bg-white/20 animate-pulse" />
                 
                 <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Epic_Games_logo.svg/1200px-Epic_Games_logo.svg.png" 
-                    alt="Epic Games Logo" 
-                    className="relative w-[55px] h-auto z-10 transition-transform duration-300 group-hover:scale-105" 
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Epic_Games_logo.svg/1200px-Epic_Games_logo.svg.png" 
+                  alt="Epic Games Logo" 
+                  className="relative w-[55px] h-auto z-10 transition-transform duration-300 group-hover:scale-105" 
                 />
-                </div>
-
+              </div>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className='hidden lg:flex items-center gap-6'>
             {menuItems.map((item, index) => (
-              <Link
-                key={index}
-                className='flex items-center cursor-pointer gap-2 text-white hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9] text-white font-semibold flex items-center justify-center transition-all duration-300 px-4 py-2 rounded-lg transition-all duration-300 font-medium'
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            ))}
+                <Link
+                  key={index}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    location.pathname === item.path
+                      ? 'bg-[#292929] shadow-[0_0_10px_#0ea5e9] text-blue-400'
+                      : 'text-white hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9]'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              ))}
           </nav>
 
           {/* Right Side - User Actions */}
-          <div className='flex items-center gap-3'>
-            {/* Admin Badge */}
-            <div className="hidden sm:flex items-center gap-2 bg-[#1f1f1f] px-4 py-1.5 rounded-full border border-[#2a2a2a] shadow-inner hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9] text-white font-semibold flex items-center justify-center transition-all duration-300">
+            <div className='flex items-center gap-3'>
+              {/* Admin Badge with Link */}
+              <Link to="/admin" className="hidden sm:flex items-center gap-2 bg-[#1f1f1f] px-4 py-1.5 rounded-full border border-[#2a2a2a] shadow-inner hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9] text-white font-semibold justify-center transition-all duration-300">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping relative">
-                    <div className="absolute w-full h-full rounded-full bg-green-400"></div>
+                  <div className="absolute w-full h-full rounded-full bg-green-400"></div>
                 </div>
                 <span className="text-white text-sm font-semibold tracking-wide">Orxan (Admin)</span>
-                </div>
+              </Link>
 
-            
-            {/* Profile Button */}
-            <button className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9] text-white font-semibold flex items-center justify-center transition-all duration-300">
-                O
+              {/* Profile Button with Link */}
+              <Link to="/admin">
+                <button className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] hover:bg-[#292929] hover:shadow-[0_0_10px_#0ea5e9] text-white font-semibold flex items-center justify-center transition-all duration-300">
+                  O
                 </button>
-          </div>
+              </Link>
+            </div>
         </header>
       </div>
 
@@ -113,10 +122,14 @@ function AdminHeader() {
           <div className='flex flex-col'>
             {menuItems.map((item, index) => (
               <Link
-              to={`/${item.name.toLowerCase()}`}
+                to={item.path}
                 key={index}
                 onClick={toggleMobileMenu}
-                className='flex items-center gap-4 text-white hover:text-blue-200 hover:bg-gray-700 px-6 py-4 transition-all duration-300 text-left font-medium border-b border-gray-700'
+                className={`flex items-center gap-4 px-6 py-4 border-b border-gray-700 transition-all duration-300 font-medium ${
+                  location.pathname === item.path
+                    ? 'bg-gray-700 text-blue-400'
+                    : 'text-white hover:text-blue-200 hover:bg-gray-700'
+                }`}
               >
                 {item.icon}
                 <span className='text-lg'>{item.name}</span>

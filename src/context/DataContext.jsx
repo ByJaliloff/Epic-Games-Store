@@ -4,6 +4,7 @@ import {
   getAllDlc,
   getAllAchievement,
   getAllSlide,
+  getAllNews
 } from "../service.js/GameService";
 
 // 1. Context yaradılır
@@ -15,6 +16,7 @@ export function GameProvider({ children }) {
   const [dlcs, setDlcs] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [slides, setSlides] = useState([]);
+  const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,18 +24,20 @@ export function GameProvider({ children }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [gamesData, dlcData, achievementData, slideData] =
+        const [gamesData, dlcData, achievementData, slideData, newsData] =
           await Promise.all([
             getAllGame(),
             getAllDlc(),
             getAllAchievement(),
             getAllSlide(),
+            getAllNews(),
           ]);
 
         setGames(gamesData || []);
         setDlcs(dlcData || []);
         setAchievements(achievementData || []);
         setSlides(slideData || []);
+        setNews(newsData || []);
       } catch (err) {
         setError("Məlumatlar yüklənərkən xəta baş verdi.");
         console.error(err);
@@ -72,6 +76,7 @@ export function GameProvider({ children }) {
         dlcs,
         achievements,
         slides,
+        news,
         loading,
         error,
         moveToWishlist,

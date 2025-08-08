@@ -16,7 +16,8 @@ const SliderAdminPanel = () => {
     image: "",
     mobImg: "",
     thumbnail: "",
-    gameId: ""
+    gameId: "",
+    isFree: false
   });
   const [isEditing, setIsEditing] = useState(false);
   const openAddModal = () => {
@@ -25,7 +26,8 @@ const SliderAdminPanel = () => {
 };
 
 const openEditModal = (item) => {
-  setFormData(item);
+  const isFree = item.price === "Free" || item.price === "$0";
+  setFormData({ ...item, isFree });
   setIsEditing(true);
   setShowModal(true);
 };
@@ -40,22 +42,31 @@ const openEditModal = (item) => {
     setSliders(data);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      if (isEditing) {
-        await updateSlider(formData.id, formData);
-      } else {
-        const newItem = { ...formData, id: uuidv4() };
-        await addSlider(newItem);
-      }
-      await fetchSliders();
-      resetForm();
-    } catch (error) {
-      alert("Əməliyyat zamanı xəta baş verdi");
+  try {
+    const finalPrice = formData.isFree ? "Free" : formData.price;
+
+    const finalData = {
+      ...formData,
+      price: finalPrice,
+    };
+
+    if (isEditing) {
+      await updateSlider(finalData.id, finalData);
+    } else {
+      const newItem = { ...finalData, id: uuidv4() };
+      await addSlider(newItem);
     }
-  };
+
+    await fetchSliders();
+    resetForm();
+  } catch (error) {
+    alert("Əməliyyat zamanı xəta baş verdi");
+  }
+};
+
 ;
 
    const handleDelete = async (id) => {
@@ -67,21 +78,30 @@ const openEditModal = (item) => {
       alert("Silinmə zamanı xəta baş verdi");
     }
   };
-        const handleChange = (e) => {
-          const { name, value } = e.target;
+const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
 
-          if (name === "price") {
-            setFormData((prev) => ({
-              ...prev,
-              [name]: `$${value}`
-            }));
-          } else {
-            setFormData((prev) => ({
-              ...prev,
-              [name]: value
-            }));
-          }
-        };
+  if (type === "checkbox" && name === "isFree") {
+    setFormData((prev) => ({
+      ...prev,
+      isFree: checked,
+      price: checked ? "Free" : "",
+    }));
+  } else if (name === "price") {
+    const formattedPrice = value === "0" || value === "0.00" ? "Free" : `$${value}`;
+    setFormData((prev) => ({
+      ...prev,
+      price: formattedPrice,
+      isFree: formattedPrice === "Free"
+    }));
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+};
+;
 
 
 const handleEdit = (item) => {
@@ -100,7 +120,8 @@ const resetForm = () => {
     image: "",
     mobImg: "",
     thumbnail: "",
-    gameId: ""
+    gameId: "",
+    isFree: false
   });
   setIsEditing(false);
 };
@@ -112,7 +133,7 @@ const resetForm = () => {
     <div className="p-6 max-w-5xl mx-auto">
       
       <div className="flex justify-between my-6">
-        <h2 className="text-2xl font-semibold mb-4">Mövcud Sliderlər:</h2>
+        <h2 className="text-2xl font-semibold mb-4">Slaydlar:</h2>
         <button
               onClick={openAddModal}
               className="
@@ -155,7 +176,7 @@ const resetForm = () => {
                     title="Redaktə"
                   >
                     <img
-                      src="./icons\icons8-edit.png"
+                      src="/icons/icons8-edit.png"
                       alt="Redaktə"
                       className="w-8 h-8"
                     />
@@ -166,7 +187,7 @@ const resetForm = () => {
                     title="Sil"
                   >
                     <img
-                      src="./icons\icons8-delete.png"
+                      src="/icons/icons8-delete.png"
                       alt="Sil"
                       className="w-8 h-8"
                     />
@@ -189,7 +210,6 @@ const resetForm = () => {
                   {[
                     { name: "title", label: "Başlıq" },
                     { name: "subtitle", label: "Alt başlıq" },
-                    { name: "price", label: "Qiymət" },
                     { name: "logo", label: "Logo URL" },
                     { name: "image", label: "Şəkil URL" },
                     { name: "mobImg", label: "Mobil şəkil URL" },
@@ -217,6 +237,42 @@ const resetForm = () => {
 
                     </div>
                   ))}
+                  {/* Price inputu + Free checkbox birlikdə */}  
+                <div className="flex flex-col md:col-span-3">
+                  <label htmlFor="price" className="mb-2 text-sm text-gray-400 font-medium">
+                    Qiymət
+                  </label>
+                  <input
+                    id="price"
+                    name="price"
+                    type="number"
+                    placeholder="Qiymət"
+                    value={
+                      formData.isFree
+                        ? ""
+                        : (formData.price || "").replace(/[^0-9.]/g, "")
+                    }
+                    onChange={handleChange}
+                    className="bg-[#202024] p-3 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={formData.isFree}
+                  />
+
+                  {/* Checkbox for Free */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      id="isFree"
+                      name="isFree"
+                      type="checkbox"
+                      checked={formData.isFree}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label htmlFor="isFree" className="text-sm font-medium text-gray-300">
+                      Bu oyun pulsuzdur (Free)
+                    </label>
+                  </div>
+                </div>
+
 
                   {/* Description - tam eni tutur */}
                   <div className="flex flex-col md:col-span-3">
@@ -227,9 +283,9 @@ const resetForm = () => {
                       id="description"
                       name="description"
                       placeholder="Təsvir"
-                       value={formData.price.replace(/[^0-9.]/g, "")}
+                      value={formData.description}
                       onChange={handleChange}
-                      className="bg-[#202024] p-3 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-28"
+                      className="bg-[#202024] p-3 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-15"
                       required
                     />
                   </div>

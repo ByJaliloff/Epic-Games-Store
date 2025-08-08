@@ -124,7 +124,7 @@ const toggleWishlist = () => {
             </button>
           </div>
 
-          <div className="absolute inset-0 bg-black/50 p-6 md:p-8 flex flex-col justify-end space-y-4 pointer-events-none md:pointer-events-auto">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent p-6 md:p-8 flex flex-col justify-end space-y-4 pointer-events-none md:pointer-events-auto">
             <div className="flex flex-col items-start mb-2">
               {activeSlide.logo && (
                 <img

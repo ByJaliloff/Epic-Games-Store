@@ -1,42 +1,58 @@
 [
   {
-    "id": 1,
+    "id": "723c702f-3662-437d-af14-efcd27ce9e8c",
     "title": "Get some sun and grab some games: The Epic Games Store Summer Sale buyer’s guide",
     "description": "Prepare for the 2025 Summer Sale in the Epic Games Store with our buyer’s guide. Discover top deals on games, information on sale dates, Epic Rewards, and more!",
     "date": "21d ago",
     "image": "https://cdn2.unrealengine.com/summer-sale-blog-key-1920x1080-24f16148a9a3.jpg?resize=1&w=854&h=480&quality=medium",
-    "link": "#"
+    "link": "https://store.epicgames.com/en-US/news/epic-games-store-summer-sale-2025-buyers-guide"
   },
   {
-    "id": 2,
+    "id": "d153bb36-aabb-4670-a3fc-cb2317bf87ea",
     "title": "Wuchang: Fallen Feathers brings color to the muted Soulslike genre",
-    "description": "What really sets Wuchang: Fallen Feathers apart is how everything in the game is connected through a cultural lens that’s deeply personal to the team.",
+    "description": "‘What really sets Wuchang: Fallen Feathers apart is how everything in the game is connected through a cultural lens that’s deeply personal to the team’",
     "date": "24d ago",
     "image": "https://cdn2.unrealengine.com/4-1920x1080-a4211496a5aa.jpg?resize=1&w=854&h=480&quality=medium",
-    "link": "#"
+    "link": "https://store.epicgames.com/en-US/news/wuchang-fallen-feathers-brings-color-to-the-muted-soulslike-genre"
   },
   {
-    "id": 3,
+    "id": "9f038d46-38fd-41be-939e-e0fddf81e3ff",
     "title": "Why QuakeCon remains a gibatastically good time after almost 30 years",
     "description": "No other LAN party has ever got quite this out of hand.",
     "date": "6h ago",
     "image": "https://cdn2.unrealengine.com/why-quakecon-remains-a-gibtasticly-good-time-after-almost-30-years-1920x1080-b837babf9ba1.jpg?resize=1&w=480&h=270&quality=medium",
-    "link": "#"
+    "link": "https://store.epicgames.com/en-US/news/why-quakecon-remains-a-gibtasticly-good-time-after-almost-30-years"
   },
   {
-    "id": 4,
+    "id": "2629d53a-7c80-4b4c-9167-6ac6c53f008a",
     "title": "112 Operator is free this week on the Epic Games Store for mobile",
     "description": "Manage riots, handle natural disasters, and become an emergency services hero in 112 Operator, free this week on the Epic Games Store for mobile.",
     "date": "7h ago",
-    "image": "/images/112-operator.jpg",
-    "link": "#"
+    "image": "https://cdn2.unrealengine.com/3p-final-freegames-editorial-header-1920x1080-d1f2a684504f.jpg?resize=1&w=480&h=270&quality=medium",
+    "link": "https://store.epicgames.com/en-US/news/112-operator-free-epic-games-store-for-mobile-august-7-14"
   },
   {
-    "id": 5,
+    "id": "de59345f-2a68-4fb0-9f7e-ef62c2cdab75",
     "title": "Shadowverse: Worlds Beyond beginners guide: 9 tips to get the most out of this anime CCG",
     "description": "Get free cards, build the best deck, and unleash evolutions to overwhelm your opponents.",
     "date": "8h ago",
-    "image": "/images/shadowverse.jpg",
-    "link": "#"
+    "image": "https://cdn2.unrealengine.com/shadowverse-worlds-beyond-beginners-guide-9-tips-to-get-the-most-out-of-this-anime-ccg-1920x1080-ec5fc1e2558f.jpg?resize=1&w=480&h=270&quality=medium",
+    "link": "https://store.epicgames.com/en-US/news/shadowverse-worlds-beyond-beginners-guide-9-tips-to-get-the-most-out-of-this-anime-ccg"
+  },
+  {
+    "id": "71a15f91-07ca-4f9e-8113-8612146e4101",
+    "title": "Play as ninja cheerleaders in Ra Ra Boom, a co-op action game about fighting rogue AI",
+    "description": "Gylee Games' debut is inspired by co-op arcade games, Saturday morning cartoons, and strong women",
+    "date": "2d ago",
+    "image": "https://cdn2.unrealengine.com/play-as-ninja-cheerleaders-in-ra-ra-boom-a-co-op-action-game-about-fighting-rogue-ai-1920x1080-f7d03cbaebe0.png?resize=1&w=480&h=270&quality=medium",
+    "link": "https://store.epicgames.com/en-US/news/play-as-ninja-cheerleaders-in-ra-ra-boom-a-co-op-action-game-about-fighting-rogue-ai"
+  },
+  {
+    "id": "0e52ebfd-d8dc-4f41-a52d-c8676e4f9800",
+    "title": "Hands-on with PowerWash Simulator 2’s new quality-of-life tech",
+    "description": "Scissor lifts, abseiling, and multi-part objectives all improve quality-of-life drastically compared to the first methodical cleaning game.",
+    "date": "2d ago",
+    "image": "https://cdn2.unrealengine.com/powerwash-simulator-2-key-1920x1080-dc319f493aff.jpg?resize=1&w=480&h=270&quality=medium",
+    "link": "https://store.epicgames.com/en-US/news/hands-on-powerwash-simulator-2-new-quality-of-life-tech-surface-cleaner"
   }
 ]

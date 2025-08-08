@@ -39,7 +39,16 @@ const getAllSlide = async () => {
     console.error(err.message || 'fetch emeliyyatinda xeta bas verdi')
   }
 }
+const getAllNews = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/news`);
+    return res.data;
+  } catch (err) {
+    console.error(err.message || "Xəbərləri gətirərkən xəta baş verdi");
+    return [];
+  }
+};
 
 export {
-    getAllGame, getAllDlc, getAllAchievement, getAllSlide
+    getAllGame, getAllDlc, getAllAchievement, getAllSlide, getAllNews
 }
