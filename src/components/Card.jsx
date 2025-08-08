@@ -352,12 +352,12 @@ const Section = ({ title, type }) => {
                       alt={item.title}
                       className="w-15 h-20 object-cover rounded-md"
                     />
-                    <div
-                        onClick={(e) => handleWishlist(item, e)}
-                        className="absolute top-0 right-0 w-7 h-7 rounded-full backdrop-blur-md bg-white/20 flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
-                      >
-
-                      <img
+                   <div
+                      onClick={(e) => handleWishlist(item, e)}
+                      className="absolute top-0 right-0 w-7 h-7 rounded-full hover:bg-white/30 flex items-center justify-center transition-all z-10
+                                opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                         <img
                         src={
                           isInWishlist
                             ? "/icons/check.png"
