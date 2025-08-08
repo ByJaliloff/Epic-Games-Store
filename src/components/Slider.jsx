@@ -90,7 +90,7 @@ const toggleWishlist = () => {
 
  return (
   <div className="bg-[#0f0f10]">
-    <div className="hidden md:flex flex-col md:flex-row gap-6px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
+    <div className="hidden md:flex flex-col md:flex-row gap-6 px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
       {/* Böyük slayd */}
       {activeSlide && (
         <div
