@@ -428,7 +428,7 @@ function Header() {
           ) : (
             <Link
               to="/signin"
-              className="hidden md:inline bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
+              className=" bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
             >
               Sign in
             </Link>
