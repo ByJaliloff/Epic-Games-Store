@@ -7,44 +7,63 @@ function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [epicMobileMenuOpen, setEpicMobileMenuOpen] = useState(false);
 
+  const [user, setUser] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   const dropdownRef = useRef(null);
+  const userMenuRef = useRef(null);
 
-useEffect(() => {
-  if (isMobileMenuOpen || epicMobileMenuOpen) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "auto";
-  }
-
-  return () => {
-    document.body.style.overflow = "auto"; // təhlükəsizlik üçün
-  };
-}, [isMobileMenuOpen, epicMobileMenuOpen]);
-
-
-
-useEffect(() => {
-  function handleClickOutside(event) {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setIsDropdownOpen(false);
+  // Body scroll bloklama
+  useEffect(() => {
+    if (isMobileMenuOpen || epicMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
     }
-  }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isMobileMenuOpen, epicMobileMenuOpen]);
 
-  function handleResize() {
-    if (window.innerWidth >= 768) {
-      setIsMobileMenuOpen(false);
-      setEpicMobileMenuOpen(false); // burası əlavə olunub
+  // LocalStorage-dan user məlumatı götür
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  }
+  }, []);
 
-  document.addEventListener("mousedown", handleClickOutside);
-  window.addEventListener("resize", handleResize);
+  // Click outside bağlama
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setIsDropdownOpen(false);
+      }
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    }
 
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-    window.removeEventListener("resize", handleResize);
-  };
-}, []);
+    function handleResize() {
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+        setEpicMobileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
 
   return (
@@ -234,12 +253,74 @@ useEffect(() => {
             <FiGlobe className="w-5 h-5" />
           </button>
 
-          <Link
-            to="/signin"
-            className="hidden md:inline bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
-          >
-            Sign in
-          </Link>
+          {user ? (
+            <div className="relative " ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                className="hidden md:flex items-center gap-2  px-3 py-2 rounded hover:text-gray-300 transition"
+              >
+                <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black  font-bold rounded-full">
+                  {user.firstName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm font-semibold">
+                  {user.firstName}
+                </span>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2">
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    My Achievement
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Epic Rewards
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Account Balance
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Coupons
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Redeem Code
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Wishlist
+                  </Link>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("user");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/signin"
+              className="hidden md:inline bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
+            >
+              Sign in
+            </Link>
+          )}
 
           <a
             href="https://store.epicgames.com/en-US/download"
@@ -284,12 +365,74 @@ useEffect(() => {
         <button className="text-white">
           <FiGlobe className="w-5 h-5" />
         </button>
-        <Link
-          to="/signin"
-          className="bg-[#343437] text-white text-sm px-3 py-2 rounded hover:bg-[#636366] font-semibold"
-        >
-          Sign in
-        </Link>
+        {user ? (
+            <div className="relative " ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                className="md:hidden flex items-center gap-2  px-3 py-2 rounded hover:text-gray-300 transition"
+              >
+                <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black  font-bold rounded-full">
+                  {user.firstName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm font-semibold">
+                  {user.firstName}
+                </span>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2">
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    My Achievement
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Epic Rewards
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Account Balance
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Coupons
+                  </Link>
+                  <Link
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Redeem Code
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Wishlist
+                  </Link>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("user");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/signin"
+              className="hidden md:inline bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
+            >
+              Sign in
+            </Link>
+          )}
       </div>
     </div>
 

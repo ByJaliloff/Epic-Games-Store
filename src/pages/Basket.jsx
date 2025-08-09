@@ -121,28 +121,8 @@ const ageRatingImages = {
               {cart.map((item) => (
               <div
                 key={item.id}
-                className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative p-3 md:p-5 md:pb-10"
+                className="bg-[#202024] rounded-xl overflow-hidden shadow-md transition duration-300 flex flex-col md:flex-row relative px-3 pb-3 pt-0 md:p-5 md:pb-10"
               >
-                {/* Price */}
-                <div className="absolute top-3 right-3 flex items-center gap-2 text-white font-semibold text-sm md:text-lg">
-                  {item.price === "Free" ? (
-                    <span className="text-[#0f0]">Free</span>
-                  ) : item.discount ? (
-                    <>
-                      <span className="bg-[#26bbff] text-black px-1.5 py-0.5 rounded text-[11px] md:text-[12px]">
-                        -{item.discount}%
-                      </span>
-                      <span className="line-through opacity-50 text-[12px] md:text-[14px]">
-                        ${parseFloat(item.price).toFixed(2)}
-                      </span>
-                      <span className="text-sm md:text-base">
-                        ${(item.price * (1 - item.discount / 100)).toFixed(2)}
-                      </span>
-                    </>
-                  ) : (
-                    <span>${parseFloat(item.price).toFixed(2)}</span>
-                  )}
-                </div>
 
                 {/* Image */}
                 <img
@@ -180,6 +160,26 @@ const ageRatingImages = {
                         </div>
                       </div>
                     )}
+                                    {/* Price */}
+                <div className="md:absolute md:top-3 md:right-3 flex items-center gap-2 text-white font-semibold text-sm md:text-lg">
+                  {item.price === "Free" ? (
+                    <span className="text-[#0f0]">Free</span>
+                  ) : item.discount ? (
+                    <>
+                      <span className="bg-[#26bbff] text-black px-1.5 py-0.5 rounded text-[11px] md:text-[12px]">
+                        -{item.discount}%
+                      </span>
+                      <span className="line-through opacity-50 text-[12px] md:text-[14px]">
+                        ${parseFloat(item.price).toFixed(2)}
+                      </span>
+                      <span className="text-sm md:text-base">
+                        ${(item.price * (1 - item.discount / 100)).toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span>${parseFloat(item.price).toFixed(2)}</span>
+                  )}
+                </div>
                                         {/* Platforms */}
                     {item.platforms && item.platforms.length > 0 && (
                       <div className="md:absolute md:bottom-3 md:left-3 flex gap-2 mt-4 md:mt-0">

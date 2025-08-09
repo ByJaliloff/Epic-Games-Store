@@ -209,7 +209,7 @@ const renderCards = (items, type, isMobile = false) => {
                   <p className="text-[#0f0] font-semibold text-lg">Free</p>
                 ) : isDiscounted ? (
                   <div className="flex items-center gap-2">
-                    <span className="bg-blue-600 text-white text-[12px] px-2 py-0.5 rounded">
+                    <span className="bg-[#26BBFF] text-black font-semibold text-[12px] px-2 py-0.5 rounded">
                       -{item.discount}%
                     </span>
                     <span className="line-through text-[#888] text-[14px]">
@@ -380,7 +380,7 @@ const Section = ({ title, type }) => {
                           <span className="text-[#0f0] text-sm font-semibold">Free</span>
                         ) : isDiscounted ? (
                           <div className="flex items-center gap-2">
-                            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+                            <span className="bg-[#26BBFF] text-black text-xs font-semibold px-2 py-0.5 rounded">
                               -{item.discount}%
                             </span>
                             <span className="text-sm line-through text-gray-400">
@@ -412,7 +412,7 @@ const Section = ({ title, type }) => {
   return (
   <div className="bg-[#0f0f10]">
       <Section title="Discover Something" type="discover" />
-      <Section title="Summer Sale Spotlight" type="sale" />
+      <Section title="Epic Savings Spotlights" type="sale" />
       
     <div className="max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[83%] xl:max-w-[75%] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
       <SectionStatic title="New Releases" type="new" index={0} />

@@ -149,7 +149,7 @@ const handleWishlist = (e) => {
           <p className="text-[#0f0] font-semibold text-[15px]">Free</p>
         ) : isDiscounted ? (
           <div className="flex items-center gap-2">
-            <span className="bg-blue-600 text-white text-[12px] px-2 py-0.5 rounded">
+            <span className="bg-[#26BBFF] text-black font-semibold text-[12px] px-2 py-0.5 rounded">
               -{game.discount}%
             </span>
             <span className="line-through text-[#888] text-[13px]">

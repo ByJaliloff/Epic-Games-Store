@@ -1,67 +1,108 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { userLogin } from "../service.js/authService";
 
-export default function Signin() {
-  const navigate = useNavigate();
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const existingUser = users.find(
-      (user) => user.email === email && user.password === password
-    );
+    if (!email.trim() || !password) {
+      toast.error("Xanaları doldurun");
+      return;
+    }
 
-    if (existingUser) {
-      localStorage.setItem("loggedInUser", JSON.stringify(existingUser));
-      navigate("/"); // ana səhifəyə yönləndir
-    } else {
-      alert("Email və ya şifrə yalnışdır");
+    try {
+      const user = await userLogin({ email: email.trim().toLowerCase(), password });
+      toast.success("Giriş uğurludur!");
+      localStorage.setItem("user", JSON.stringify(user));
+      navigate("/");
+    } catch {
+      toast.error("Email və ya şifrə yalnışdır");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f0f] text-white">
-      <form
-        onSubmit={handleLogin}
-        className="bg-[#1a1a1a] p-8 rounded-xl w-[90%] max-w-md shadow-xl"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign in</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#101014] px-4">
+      <div className="max-w-md w-full bg-[#18181c] rounded-2xl shadow-lg p-4 md:p-8 border border-gray-500">
+        <h1 className="text-[24px] font-bold text-white text-center mb-8">Sign in to Epic Games</h1>
+        <form onSubmit={handleLogin} className="space-y-6 border border-gray-500 rounded-xl p-4 bg-[#18181c]">
+          <h4 className="text-base text-center text-gray-300 font-semibold">Played on PC or mobile?</h4>
+          <div>
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-2">
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+              className="w-full rounded-md bg-[#242428] border border-gray-500  py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 hover:border-gray-400"
+              placeholder="example@email.com"
+            />
+          </div>
 
-        <label className="block text-sm mb-1">Email</label>
-        <input
-          type="email"
-          className="w-full p-2 mb-4 rounded bg-[#2a2a2a] text-white"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          <div className="relative">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-300 mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              className="w-full rounded-md bg-[#242428] border border-gray-500  py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 hover:border-gray-400"
+              placeholder="Your password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-[65%] translate-y-[-50%] text-gray-400 hover:text-white"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
+          </div>
 
-        <label className="block text-sm mb-1">Password</label>
-        <input
-          type="password"
-          className="w-full p-2 mb-6 rounded bg-[#2a2a2a] text-white"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div className="flex justify-end">
+            <Link
+              to="#"
+              className="text-[14px] text-[#26bbff] underline font-semibold"
+              onClick={(e) => e.preventDefault()}
+            >
+              Trouble signing in?
+            </Link>
+          </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600 transition p-2 rounded font-semibold"
-        >
-          Continue
-        </button>
+          <button
+            type="submit"
+            className="w-full bg-[#26BBFF] hover:bg-[#61CDFF] text-black font-semibold py-3 rounded-xl transition cursor-pointer"
+          >
+            Sign In
+          </button>
+        </form>
 
-        <p className="mt-6 text-center text-sm">
+        <p className="mt-6 text-center text-white bg-[#242428] border border-gray-500 py-3 rounded-md text-[14px] font-semibold">
           New here?{" "}
-          <Link to="/signup" className="text-blue-400 hover:underline">
+          <Link to="/signup" className="text-[#26bbff] underline ">
             Create an account
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }
+
+export default Login;
