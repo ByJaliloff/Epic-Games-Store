@@ -4,7 +4,6 @@ import Home from "./pages/Home";
 import Details from "./pages/Details";
 import Wishlist from "./pages/Wishlist"; // <== Əlavə et
 import Basket from "./pages/Basket";
-import Signup from "./components/Register";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./toast.css";
@@ -19,6 +18,7 @@ import DlcAdminPanel from "./pages/DlcAdminPanel";
 import GamesAdminPanel from "./pages/GamesAdminPanel";
 import Error from "./pages/Error";
 import Login from "./components/Login";
+import Register from "./components/Register";
 
 
 
@@ -45,7 +45,7 @@ function App() {
           <Route path="games" element={<GamesAdminPanel />} />
       </Route>
       <Route path="/signin" element={<Login />} />
-      <Route path="/signup" element={<Signup />} /> */
+      <Route path="/signup" element={<Register />} /> */
       
     </Routes>
      <ToastContainer toastClassName="custom-toast" position="top-right" autoClose={3000} theme="dark" />

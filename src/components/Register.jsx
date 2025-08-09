@@ -4,7 +4,7 @@ import { userSignUp } from "../service.js/authService";
 import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-function SignUp() {
+function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: "",
@@ -162,4 +162,4 @@ function SignUp() {
   );
 }
 
-export default SignUp;
+export default Register;
