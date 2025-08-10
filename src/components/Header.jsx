@@ -416,8 +416,7 @@ function Header() {
                   </Link>
                   <button
                     onClick={() => {
-                      localStorage.removeItem("user");
-                      setUser(null);
+                      logout()
                        closeMobileMenu();
                     }}
                     className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
