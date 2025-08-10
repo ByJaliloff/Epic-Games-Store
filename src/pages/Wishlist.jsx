@@ -31,7 +31,7 @@ const ageRatingImages = {
 
 function Wishlist() {
 
-  const { loading, error } = useContext(GameContext);
+  const { loading, error, user } = useContext(GameContext);
 
   if (loading) return <Loader />;
 
@@ -41,14 +41,21 @@ function Wishlist() {
   const [wishlist, setWishlist] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(saved);
-  }, []);
+useEffect(() => {
+  if (!user) {
+    setWishlist([]);
+    return;
+  }
+  const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+  setWishlist(saved);
+}, [user]);
 
 const removeFromWishlist = (id) => {
+  if (!user) return;
+
   const updated = wishlist.filter((item) => item.id !== id);
-  const removedItem = wishlist.find((item) => item.id === id);
+  setWishlist(updated);
+  localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
 
   setWishlist(updated);
   localStorage.setItem("wishlist", JSON.stringify(updated));

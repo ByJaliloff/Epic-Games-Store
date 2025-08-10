@@ -12,7 +12,7 @@ export default function SearchNav() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const { games, dlcs } = useContext(GameContext);
+  const { games, dlcs, user } = useContext(GameContext);
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -257,18 +257,38 @@ return (
 
       {/* Sağ (Wishlist, Cart) */}
       <div className="hidden md:flex items-center text-sm space-x-4 font-medium">
-        <Link to="/wishlist" className="text-gray-400 hover:text-white transition">
+        <Link
+          to="/wishlist"
+          onClick={(e) => {
+            if (!user) {
+              e.preventDefault(); // linkin default davranışını ləğv et
+              navigate("/signin");
+            }
+          }}
+          className="text-gray-400 hover:text-white transition"
+        >
           Wishlist
         </Link>
-        <Link to="/basket" className="text-gray-400 hover:text-white transition">
+
+                <Link to="/basket" className="text-gray-400 hover:text-white transition">
           Cart
         </Link>
       </div>
 
       <div className="flex md:hidden items-center space-x-4 text-xl text-gray-400 pl-5">
-        <Link to="/wishlist" className="hover:text-white transition">
-          <FaRegCheckCircle />
-        </Link>
+            <Link
+              to="#"
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  navigate("/signin");
+                }
+              }}
+              className="hover:text-white transition"
+            >
+              <FaRegCheckCircle />
+            </Link>
+
         <Link to="/basket" className="hover:text-white transition">
           <IoCartOutline />
         </Link>

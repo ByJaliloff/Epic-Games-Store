@@ -1,16 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { GameContext } from "../context/DataContext";
 
 
 
 function Slider({ slides, games }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { user } = useContext(GameContext);
   const navigate = useNavigate();
 
-  const [wishlist, setWishlist] = useState(
-    JSON.parse(localStorage.getItem("wishlist")) || []
-  );
+
+const [wishlist, setWishlist] = useState([]);
+  useEffect(() => {
+    if (user) {
+      const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      setWishlist(saved);
+    } else {
+      setWishlist([]);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -40,52 +49,59 @@ function Slider({ slides, games }) {
     }
   };
 
-  const isInWishlist = wishlist.some((item) => item.id === activeSlide?.gameId);
+ const isInWishlist = activeSlide
+    ? wishlist.some((item) => item.id === activeSlide.gameId)
+    : false;
 
 const toggleWishlist = () => {
-  const gameId = activeSlide.gameId;
-  const foundGame = games.find((game) => game.id === gameId);
-  if (!foundGame) return;
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
 
-  let updatedWishlist;
+    const gameId = activeSlide.gameId;
+    const foundGame = games.find((game) => game.id === gameId);
+    if (!foundGame) return;
 
-  if (isInWishlist) {
-    updatedWishlist = wishlist.filter((item) => item.id !== gameId);
+    let updatedWishlist;
 
-    toast.info(
-      <div className="flex items-center gap-3">
-        <img
-          src={foundGame.image}
-          alt={foundGame.title}
-          className="w-10 h-10 rounded object-cover"
-        />
-        <div>
-          <p className="font-semibold text-white">{foundGame.title}</p>
-          <p className="text-sm text-gray-300">Removed from wishlist</p>
+    if (isInWishlist) {
+      updatedWishlist = wishlist.filter((item) => item.id !== gameId);
+
+      toast.info(
+        <div className="flex items-center gap-3">
+          <img
+            src={foundGame.image}
+            alt={foundGame.title}
+            className="w-10 h-10 rounded object-cover"
+          />
+          <div>
+            <p className="font-semibold text-white">{foundGame.title}</p>
+            <p className="text-sm text-gray-300">Removed from wishlist</p>
+          </div>
         </div>
-      </div>
-    );
-  } else {
-    updatedWishlist = [...wishlist, foundGame];
+      );
+    } else {
+      updatedWishlist = [...wishlist, foundGame];
 
-    toast.success(
-      <div className="flex items-center gap-3">
-        <img
-          src={foundGame.image}
-          alt={foundGame.title}
-          className="w-10 h-10 rounded object-cover"
-        />
-        <div>
-          <p className="font-semibold text-white">{foundGame.title}</p>
-          <p className="text-sm text-green-400">Added to wishlist</p>
+      toast.success(
+        <div className="flex items-center gap-3">
+          <img
+            src={foundGame.image}
+            alt={foundGame.title}
+            className="w-10 h-10 rounded object-cover"
+          />
+          <div>
+            <p className="font-semibold text-white">{foundGame.title}</p>
+            <p className="text-sm text-green-400">Added to wishlist</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  setWishlist(updatedWishlist);
-  localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-};
+    setWishlist(updatedWishlist);
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
+  };
 
 
  return (

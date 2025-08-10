@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { GameContext } from "../context/DataContext";
 
 
 const typeMapping = {
@@ -13,62 +14,70 @@ const typeMapping = {
 
 export default function GameCard({ game }) {
   const navigate = useNavigate();
+  const { user } = useContext(GameContext);
 
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
-const [isInWishlist, setIsInWishlist] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setIsInWishlist(false);
+      return;
+    }
+    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+    setIsInWishlist(wishlist.some((w) => w.id === game.id));
+  }, [game.id, user]);
 
-useEffect(() => {
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-  setIsInWishlist(wishlist.some((w) => w.id === game.id));
-}, [game.id]); // yalnız bu game üçün yoxlayı
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
 
-const handleWishlist = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+    const exists = wishlist.find((i) => i.id === game.id);
 
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-  const exists = wishlist.find((i) => i.id === game.id);
+    let updated;
+    if (exists) {
+      updated = wishlist.filter((i) => i.id !== game.id);
+      setIsInWishlist(false);
 
-  let updated;
-  if (exists) {
-    updated = wishlist.filter((i) => i.id !== game.id);
-    setIsInWishlist(false);
-
-    toast.info(
-      <div className="flex items-center gap-3">
-        <img
-          src={game.image}
-          alt={game.title}
-          className="w-10 h-10 rounded object-cover"
-        />
-        <div>
-          <p className="font-semibold text-white">{game.title}</p>
-          <p className="text-sm text-gray-300">Removed from wishlist</p>
+      toast.info(
+        <div className="flex items-center gap-3">
+          <img
+            src={game.image}
+            alt={game.title}
+            className="w-10 h-10 rounded object-cover"
+          />
+          <div>
+            <p className="font-semibold text-white">{game.title}</p>
+            <p className="text-sm text-gray-300">Removed from wishlist</p>
+          </div>
         </div>
-      </div>
-    );
-  } else {
-    updated = [...wishlist, game];
-    setIsInWishlist(true);
+      );
+    } else {
+      updated = [...wishlist, game];
+      setIsInWishlist(true);
 
-    toast.success(
-      <div className="flex items-center gap-3">
-        <img
-          src={game.image}
-          alt={game.title}
-          className="w-10 h-10 rounded object-cover"
-        />
-        <div>
-          <p className="font-semibold text-white">{game.title}</p>
-          <p className="text-sm text-green-400">Added to wishlist</p>
+      toast.success(
+        <div className="flex items-center gap-3">
+          <img
+            src={game.image}
+            alt={game.title}
+            className="w-10 h-10 rounded object-cover"
+          />
+          <div>
+            <p className="font-semibold text-white">{game.title}</p>
+            <p className="text-sm text-green-400">Added to wishlist</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  localStorage.setItem("wishlist", JSON.stringify(updated));
-};
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
+  };
 
 
   const handleAddToCartAndNavigate = () => {

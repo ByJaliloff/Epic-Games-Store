@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { userLogin } from "../service.js/authService";
+import { GameContext } from "../context/DataContext"; // doğru yolu düzəlt
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const { login } = useContext(GameContext); // context-dən login funksiyasını alırıq
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,7 +24,12 @@ function Login() {
     try {
       const user = await userLogin({ email: email.trim().toLowerCase(), password });
       toast.success("Giriş uğurludur!");
+
+      // localStorage-ə yaz
       localStorage.setItem("user", JSON.stringify(user));
+      // context state-inə də yaz
+      login(user);
+
       navigate("/");
     } catch {
       toast.error("Email və ya şifrə yalnışdır");

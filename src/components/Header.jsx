@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiGlobe } from "react-icons/fi";
+import { GameContext } from "../context/DataContext";
 
 function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [epicMobileMenuOpen, setEpicMobileMenuOpen] = useState(false);
 
-  const [user, setUser] = useState(null);
+  const { user, logout } = useContext(GameContext);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const dropdownRef = useRef(null);
@@ -25,13 +26,6 @@ function Header() {
     };
   }, [isMobileMenuOpen, epicMobileMenuOpen]);
 
-  // LocalStorage-dan user məlumatı götür
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   // Click outside bağlama
   useEffect(() => {
@@ -64,6 +58,12 @@ function Header() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const closeMobileMenu = () => {
+  setIsMobileMenuOpen(false);
+  setIsUserMenuOpen(false); // dashboard-u da bağla
+};
+
 
 
   return (
@@ -300,17 +300,18 @@ function Header() {
                   >
                     Wishlist
                   </Link>
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem("user");
-                      setUser(null);
-                      setIsUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Sign out
-                  </button>
-                </div>
+                  {user && (
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsUserMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                >
+                  Sign out
+                </button>
+              )}
+                 </div>
               )}
             </div>
           ) : (
@@ -407,6 +408,7 @@ function Header() {
                     Redeem Code
                   </Link>
                   <Link
+                    onClick={closeMobileMenu}
                     to="/wishlist"
                     className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
                   >
@@ -416,7 +418,7 @@ function Header() {
                     onClick={() => {
                       localStorage.removeItem("user");
                       setUser(null);
-                      setIsUserMenuOpen(false);
+                       closeMobileMenu();
                     }}
                     className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
                   >

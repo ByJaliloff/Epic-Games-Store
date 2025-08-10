@@ -1,60 +1,68 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loader from "./Loader";
 import Error from "../pages/Error";
+import { GameContext } from "../context/DataContext";
 
 
 function Card( {games, dlcs, loading, error}) {
 
+  const { user } = useContext(GameContext);
   const navigate = useNavigate();
 
-  const [wishlistItems, setWishlistItems] = useState(
-    JSON.parse(localStorage.getItem("wishlist")) || []
-  );
+  const [wishlistItems, setWishlistItems] = useState([]);
+
+   useEffect(() => {
+    if (user) {
+      const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      setWishlistItems(saved);
+    } else {
+      setWishlistItems([]);
+    }
+  }, [user]);
 
 const handleWishlist = (item, e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  const exists = wishlistItems.find((i) => i.id === item.id);
-  let updatedWishlist;
+    if (!user) {
+      navigate('/signin')
+      return;
+    }
 
-  if (exists) {
-    updatedWishlist = wishlistItems.filter((i) => i.id !== item.id);
-    toast.info(
-  <div className="flex items-center gap-3">
-    <img
-      src={item.image}
-      alt={item.title}
-      className="w-10 h-10 object-cover rounded"
-    />
-    <div>
-      <p className="text-white font-semibold">{item.title}</p>
-      <p className="text-gray-300 text-sm">Removed from wishlist</p>
-    </div>
-  </div>
-);
+    const exists = wishlistItems.find((i) => i.id === item.id);
+    let updatedWishlist;
 
-  } else {
-    updatedWishlist = [...wishlistItems, item];
-    toast.success(
-  <div className="flex items-center gap-3">
-    <img src={item.image} alt="game" className="w-10 h-10 rounded object-cover" />
-    <div>
-      <p className="font-semibold text-white">{item.title}</p>
-      <p className="text-sm text-gray-300">Added to wishlist</p>
-    </div>
-  </div>
-);
+    if (exists) {
+      updatedWishlist = wishlistItems.filter((i) => i.id !== item.id);
+      toast.info(
+        <div className="flex items-center gap-3">
+          <img src={item.image} alt={item.title} className="w-10 h-10 object-cover rounded" />
+          <div>
+            <p className="text-white font-semibold">{item.title}</p>
+            <p className="text-gray-300 text-sm">Removed from wishlist</p>
+          </div>
+        </div>
+      );
+    } else {
+      updatedWishlist = [...wishlistItems, item];
+      toast.success(
+        <div className="flex items-center gap-3">
+          <img src={item.image} alt={item.title} className="w-10 h-10 rounded object-cover" />
+          <div>
+            <p className="font-semibold text-white">{item.title}</p>
+            <p className="text-sm text-gray-300">Added to wishlist</p>
+          </div>
+        </div>
+      );
+    }
 
-  }
-
-  setWishlistItems(updatedWishlist);
-  localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-};
+    setWishlistItems(updatedWishlist);
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
+  };
 
   const handleAddToCartAndNavigate = (item, e) => {
     e.preventDefault();

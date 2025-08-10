@@ -19,6 +19,7 @@ export function GameProvider({ children }) {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   // 3. Məlumatlar yüklənir
   useEffect(() => {
@@ -49,6 +50,22 @@ export function GameProvider({ children }) {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    if (user) {
+      localStorage.removeItem("user");
+      setUser(null);
+    }
+  };
 
 
   // Səbətdən istəyə köçürmək funksiyası
@@ -80,6 +97,9 @@ export function GameProvider({ children }) {
         loading,
         error,
         moveToWishlist,
+        user,
+        login,
+        logout,
       }}
     >
       {children}
