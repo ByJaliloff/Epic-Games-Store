@@ -277,7 +277,7 @@ return (
 
       <div className="flex md:hidden items-center space-x-4 text-xl text-gray-400 pl-5">
             <Link
-              to="#"
+              to="/wishlist"
               onClick={(e) => {
                 if (!user) {
                   e.preventDefault();
