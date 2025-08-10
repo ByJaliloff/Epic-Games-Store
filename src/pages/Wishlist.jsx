@@ -53,12 +53,11 @@ useEffect(() => {
 const removeFromWishlist = (id) => {
   if (!user) return;
 
+  const removedItem = wishlist.find((item) => item.id === id); // <-- Əlavə et
+
   const updated = wishlist.filter((item) => item.id !== id);
   setWishlist(updated);
   localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
-
-  setWishlist(updated);
-  localStorage.setItem("wishlist", JSON.stringify(updated));
 
   toast.info(
     <div className="flex items-center gap-3">
@@ -74,6 +73,7 @@ const removeFromWishlist = (id) => {
     </div>
   );
 };
+
 
 
 const addToCart = (item) => {
