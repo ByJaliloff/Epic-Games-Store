@@ -214,7 +214,7 @@ const renderCards = (items, type, isMobile = false) => {
 
               <div className="mt-2">
                 {isFree ? (
-                  <p className="text-[#0f0] font-semibold text-lg">Free</p>
+                  <p className="text-[#ffffff] font-semibold text-[14px]">Free</p>
                 ) : isDiscounted ? (
                   <div className="flex items-center gap-2">
                     <span className="bg-[#26BBFF] text-black font-semibold text-[12px] px-2 py-0.5 rounded">
@@ -385,7 +385,7 @@ const Section = ({ title, type }) => {
                         <span className="font-semibold text-base line-clamp-1">{item.title}</span>
 
                         {isFree ? (
-                          <span className="text-[#0f0] text-sm font-semibold">Free</span>
+                          <span className="text-[#ffffff] text-sm font-semibold">Free</span>
                         ) : isDiscounted ? (
                           <div className="flex items-center gap-2">
                             <span className="bg-[#26BBFF] text-black text-xs font-semibold px-2 py-0.5 rounded">

@@ -10,21 +10,13 @@ import Error from "./Error";
 
 function Details() {
   const { id } = useParams();
-  const { games, dlcs, error } = useContext(GameContext);
+  const { games, dlcs, error, user } = useContext(GameContext);
    if (error) return <Error />;
   const navigate = useNavigate();
 
 
   const game = games.find((g) => g.id === id);
    if (!game) return <Error />;
-
-
-useEffect(() => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-  setIsInCart(cart.some((item) => item.id === game?.id));
-  setIsInWishlist(wishlist.some((item) => item.id === game?.id));
-}, [game]);
 
  const relatedDlcs = dlcs.filter(
   (dlc) =>
@@ -39,7 +31,7 @@ const [isInWishlist, setIsInWishlist] = useState(false);
 
 useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+  const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
   setIsInCart(cart.some((item) => item.id === game?.id));
   setIsInWishlist(wishlist.some((item) => item.id === game?.id));
 }, [game]);
@@ -163,7 +155,7 @@ useEffect(() => {
 
 const addToCart = () => {
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+  const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
 
   if (!cart.find((item) => item.id === game.id)) {
     const updatedCart = [...cart, game];
@@ -183,18 +175,18 @@ const addToCart = () => {
 
   if (wishlist.find((item) => item.id === game.id)) {
     const updatedWishlist = wishlist.filter((item) => item.id !== game.id);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
     setIsInWishlist(false);
   }
 };
 
 
 const addToWishlist = () => {
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+  const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
 
   if (!wishlist.find((item) => item.id === game.id)) {
     const updatedWishlist = [...wishlist, game];
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
     setIsInWishlist(true);
 
     toast.success(
@@ -390,7 +382,7 @@ const addToWishlist = () => {
 
       {/* Price Section */}
       {isFree ? (
-        <span className="text-[#0f0] font-semibold text-lg">Free</span>
+        <span className="text-[#ffffff] font-semibold text-lg">Free</span>
       ) : game.discount ? (
         <div className="flex items-center gap-4">
           <span className="bg-blue-600 text-sm px-2 py-1 rounded-full">-{game.discount}%</span>
