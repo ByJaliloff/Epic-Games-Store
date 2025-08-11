@@ -4,9 +4,11 @@ import { GameContext } from "../context/DataContext";
 import GameCard from "../components/GameCard";
 import FilterPanel from "../components/FilterPanel";
 import SearchNav from "../components/SearchNav";
+import Loader from "../components/Loader";
 
 export default function Browse() {
   const { games, dlcs } = useContext(GameContext);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
   const [shouldHideHighlight, setShouldHideHighlight] = useState(false);
 
@@ -159,7 +161,15 @@ export default function Browse() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
+    useEffect(() => {
+    // games və dlcs gələndə loading false olacaq
+    if (games.length > 0 || dlcs.length > 0) {
+      setLoading(false);
+    }
+  }, [games, dlcs]);
   const recommended = games.slice(0, 5);
+
+  if (loading) return  <Loader />
 
   return (
     <>

@@ -19,9 +19,6 @@ function Details() {
    if (!game) return <Error />;
 
 
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-
 useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
   const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
@@ -113,7 +110,7 @@ useEffect(() => {
 }, [game?.carouselImages?.length ?? 0]);
 
 
-  if (!game) return <div className="text-white">Oyun tapılmadı...</div>;
+  if (!game) return <Error />
 
   const isFree = game.price === 0 || game.price === "Free" || game.isFree === true;
   const originalPrice = isFree ? 0 : parseFloat(game.price);

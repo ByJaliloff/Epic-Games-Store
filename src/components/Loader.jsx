@@ -1,15 +1,15 @@
 export default function Loader() {
   return (
     <div
-      className="min-h-screen flex items-center justify-center"
+      className="flex items-center justify-center min-h-[300px] sm:min-h-[500px] md:min-h-screen"
       style={{
-      background: "linear-gradient(to right, #011E3E, #021837)"
-  }}
+        background: "linear-gradient(to right, #011E3E, #021837)",
+      }}
     >
       <img
-        src="/images/epic-loader.gif"
+        src="/images/epic-loader2.gif"
         alt="Loading..."
-        style={{ width: 800, height: "auto" }}
+        className="w-32 sm:w-40 md:w-52"
       />
     </div>
   );
