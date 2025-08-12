@@ -310,7 +310,7 @@ export default function Browse() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-8">
-              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 rounded bg-[#1e1e1e] text-white disabled:opacity-50">
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 rounded bg-[#1e1e1e] text-white disabled:opacity-50 cursor-pointer">
                 &lt;
               </button>
               {getPageNumbers().map((page, index) =>
@@ -320,13 +320,13 @@ export default function Browse() {
                   <button
                     key={index}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded ${currentPage === page ? "bg-[#26BBFF] text-black" : "bg-[#1e1e1e] text-white"}`}
+                    className={`px-3 py-1 rounded cursor-pointer ${currentPage === page ? "bg-[#26BBFF] text-black" : "bg-[#1e1e1e] text-white"}`}
                   >
                     {page}
                   </button>
                 )
               )}
-              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 rounded bg-[#1e1e1e] text-white disabled:opacity-50">
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 rounded bg-[#1e1e1e] text-white disabled:opacity-50 cursor-pointer">
                 &gt;
               </button>
             </div>
