@@ -36,7 +36,7 @@ function Wishlist() {
   if (loading) return <Loader />;
 
   // error varsa göstər
-  if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (error) return <Error />
 
   const [wishlist, setWishlist] = useState([]);
   const navigate = useNavigate();
@@ -112,6 +112,61 @@ const isInCart = (id) => {
   const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
   return cart.some((item) => item.id === id);
 };
+
+  if (!user?.id) {
+    return (
+      <>
+        <SearchNav />
+        <div className="bg-[#0f0f10] min-h-screen py-10 text-white">
+          <div className="w-[90%] md:max-w-[75%] mx-auto mb-6">
+            <h1 className="text-[40px] font-bold text-[#ffffff] mb-10 text-center md:text-left">
+              My Cart
+            </h1>
+            <div className="text-center mt-20 flex flex-col items-center justify-center gap-4">
+              <div className="mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-16 h-16"
+                  viewBox="0 0 45 52"
+                >
+                  <g fill="none" fillRule="evenodd">
+                    <path
+                      d="M4.058 0C1.094 0 0 1.098 0 4.075v35.922c0 .338.013.65.043.94.068.65-.043 1.934 2.285 2.96 1.553.683 7.62 3.208 18.203 7.573 1.024.428 1.313.529 2.081.529.685.013 1.137-.099 2.072-.53 10.59-4.227 16.66-6.752 18.213-7.573 2.327-1.23 2.097-3.561 2.097-3.899V4.075C44.994 1.098 44.13 0 41.166 0H4.058z"
+                      fill="#404044"
+                    ></path>
+                    <path
+                      stroke="#FFF"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M14 18l4.91 2.545-2.455 4M25.544 28.705c-1.056-.131-1.806-.14-2.25-.025-.444.115-1.209.514-2.294 1.197M29.09 21.727L25 19.5l2.045-3.5"
+                    ></path>
+                  </g>
+                </svg>
+              </div>
+
+              <p className="text-white text-[30px] mb-6 font-bold max-w-[90%]">
+                Please log in to view your whistlist.
+              </p>
+
+              <button
+                onClick={() => navigate("/signin")}
+                className="bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]  font-semibold px-6 py-2 rounded-md text-sm transition mr-4"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="bg-[#26bbff] hover:bg-[#00aaff] text-black font-semibold px-6 py-2 rounded-md text-sm transition mr-4"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

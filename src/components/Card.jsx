@@ -28,10 +28,10 @@ const handleWishlist = (item, e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
-      navigate('/signin')
-      return;
-    }
+  if (!user?.id) {
+    toast.error("Please log in to add items to your wishlist");
+    return;
+  }
 
     const exists = wishlistItems.find((i) => i.id === item.id);
     let updatedWishlist;

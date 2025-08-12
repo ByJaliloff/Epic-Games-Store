@@ -259,12 +259,6 @@ return (
       <div className="hidden md:flex items-center text-sm space-x-4 font-medium">
         <Link
           to="/wishlist"
-          onClick={(e) => {
-            if (!user) {
-              e.preventDefault(); // linkin default davranışını ləğv et
-              navigate("/signin");
-            }
-          }}
           className="text-gray-400 hover:text-white transition"
         >
           Wishlist
@@ -277,14 +271,7 @@ return (
 
       <div className="flex md:hidden items-center space-x-4 text-xl text-gray-400 pl-5">
             <Link
-              to="/wishlist"
-              onClick={(e) => {
-                if (!user) {
-                  e.preventDefault();
-                  navigate("/signin");
-                }
-              }}
-              className="hover:text-white transition"
+              to="/wishlist" className="hover:text-white transition"
             >
               <FaRegCheckCircle />
             </Link>

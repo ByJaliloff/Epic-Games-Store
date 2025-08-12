@@ -31,11 +31,10 @@ export default function GameCard({ game }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
-      navigate("/signin");
-      return;
-    }
-
+  if (!user?.id) {
+    toast.error("Please log in to add items to your wishlist");
+    return;
+  }
     const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
     const exists = wishlist.find((i) => i.id === game.id);
 

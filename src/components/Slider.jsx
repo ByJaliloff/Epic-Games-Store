@@ -3,15 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { GameContext } from "../context/DataContext";
 
-
-
 function Slider({ slides, games }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const { user } = useContext(GameContext);
   const navigate = useNavigate();
 
+  const [wishlist, setWishlist] = useState([]);
 
-const [wishlist, setWishlist] = useState([]);
   useEffect(() => {
     if (user) {
       const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
@@ -42,6 +40,8 @@ const [wishlist, setWishlist] = useState([]);
   };
 
   const handleBuyNow = () => {
+    if (!activeSlide) return;
+    
     const gameId = activeSlide.gameId;
     const foundGame = games.find((game) => game.id === gameId);
     if (foundGame) {
@@ -49,15 +49,18 @@ const [wishlist, setWishlist] = useState([]);
     }
   };
 
- const isInWishlist = activeSlide
+  // Fixed wishlist check - now properly checks by ID
+  const isInWishlist = activeSlide
     ? wishlist.some((item) => item.id === activeSlide.gameId)
     : false;
 
-const toggleWishlist = () => {
+  const toggleWishlist = () => {
     if (!user) {
       navigate("/signin");
       return;
     }
+
+    if (!activeSlide) return;
 
     const gameId = activeSlide.gameId;
     const foundGame = games.find((game) => game.id === gameId);
@@ -66,6 +69,7 @@ const toggleWishlist = () => {
     let updatedWishlist;
 
     if (isInWishlist) {
+      // Remove from wishlist by filtering out the game with matching ID
       updatedWishlist = wishlist.filter((item) => item.id !== gameId);
 
       toast.info(
@@ -82,6 +86,7 @@ const toggleWishlist = () => {
         </div>
       );
     } else {
+      // Add to wishlist - store the full game object
       updatedWishlist = [...wishlist, foundGame];
 
       toast.success(
@@ -103,15 +108,18 @@ const toggleWishlist = () => {
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
   };
 
+  // Safety check - don't render if no active slide
+  if (!activeSlide) {
+    return <div className="bg-[#0f0f10] min-h-[400px]"></div>;
+  }
 
- return (
-  <div className="bg-[#0f0f10]">
-    <div className="hidden md:flex flex-col md:flex-row gap-6 px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
-      {/* Böyük slayd */}
-      {activeSlide && (
+  return (
+    <div className="bg-[#0f0f10]">
+      <div className="hidden md:flex flex-col md:flex-row gap-6 px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
+        {/* Böyük slayd */}
         <div
           onClick={() => {
-            if (window.innerWidth < 768) handleBuyNow(); // 768-dən aşağıda kliklə yönləndir
+            if (window.innerWidth < 768) handleBuyNow();
           }}
           className="flex-1 relative rounded-2xl overflow-hidden min-h-[400px] md:min-h-[500px] cursor-pointer"
         >
@@ -125,7 +133,7 @@ const toggleWishlist = () => {
           <div className="absolute top-3 right-3 md:hidden z-20">
             <button
               onClick={(e) => {
-                e.stopPropagation(); // Kart klikini blokla
+                e.stopPropagation();
                 toggleWishlist();
               }}
               className={`w-9 h-9 flex items-center justify-center rounded-full ${
@@ -185,92 +193,91 @@ const toggleWishlist = () => {
             </div>
           </div>
         </div>
-      )}
 
-      {/* Thumbnail-lər */}
-      <div
-        className="mt-4 md:mt-0 md:w-[180px] flex flex-row md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-visible scrollbar-none"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {slides.map((slide, index) => (
+        {/* Thumbnail-lər */}
+        <div
+          className="mt-4 md:mt-0 md:w-[180px] flex flex-row md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-visible scrollbar-none"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              onClick={() => setActiveIndex(index)}
+              className={`relative flex items-center gap-3 p-3 md:p-4 rounded-lg text-left transition overflow-hidden z-10 min-w-[200px] md:min-w-0 ${
+                index === activeIndex
+                  ? "bg-white/10"
+                  : "hover:bg-white/5 text-white/80"
+              }`}
+            >
+              <img
+                src={slide.thumbnail}
+                alt={slide.title}
+                className="w-10 h-12 object-cover rounded z-10"
+              />
+              <span className="text-sm z-10">{slide.title}</span>
+
+              {index === activeIndex && (
+                <span className="absolute bottom-0 left-0 h-[84px] bg-gradient-to-r from-[#3a3a3a] to-[#5a5a5a] transition-all duration-75 ease-linear animate-slideProgress w-full z-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobil Slider — 768px-dən aşağı üçün */}
+      <div className="md:hidden w-full px-4 py-6 bg-[#0f0f10]">
+        <div
+          className="w-full h-[440px] rounded-2xl overflow-hidden relative cursor-pointer"
+          onClick={handleBuyNow}
+        >
+          <img
+            src={activeSlide.mobImg}
+            alt={activeSlide.title}
+            className="w-full h-full object-cover"
+          />
+
+          {/* Wishlist ikon */}
           <button
-            key={slide.id}
-            onClick={() => setActiveIndex(index)}
-            className={`relative flex items-center gap-3 p-3 md:p-4 rounded-lg text-left transition overflow-hidden z-10 min-w-[200px] md:min-w-0 ${
-              index === activeIndex
-                ? "bg-white/10"
-                : "hover:bg-white/5 text-white/80"
-            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleWishlist();
+            }}
+            className="absolute top-3 right-3 rounded-full p-2 z-10"
           >
-            <img
-              src={slide.thumbnail}
-              alt={slide.title}
-              className="w-10 h-12 object-cover rounded z-10"
-            />
-            <span className="text-sm z-10">{slide.title}</span>
-
-            {index === activeIndex && (
-              <span className="absolute bottom-0 left-0 h-[84px] bg-gradient-to-r from-[#3a3a3a] to-[#5a5a5a] transition-all duration-75 ease-linear animate-slideProgress w-full z-0" />
+            {isInWishlist ? (
+              <img src="/icons/check.png" alt="In Wishlist" className="w-5 h-5" />
+            ) : (
+              <img src="/icons/wishlist5.png" alt="Add to Wishlist" className="w-5 h-5" />
             )}
           </button>
-        ))}
+
+          {/* Alt overlay yazılar */}
+          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90 to-transparent text-white">
+            {activeSlide.logo && (
+              <img src={activeSlide.logo} alt={activeSlide.title} className="w-50 h-20" />
+            )}
+            <p className="text-[9px] text-white uppercase my-2 font-bold">{activeSlide.subtitle}</p>
+            <h2 className="text-base font-semibold mb-1">{activeSlide.title}</h2>
+            <p className="text-sm opacity-90">{activeSlide.description}</p>
+            <p className="mt-2 text-sm font-semibold">{activeSlide.price}</p>
+          </div>
+        </div>
+
+        {/* Pagination dots */}
+        <div className="flex justify-center mt-4 gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={`w-2 h-2 rounded-full transition ${
+                index === activeIndex ? "bg-white" : "bg-gray-400/40"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
-    {/* Mobil Slider — 768px-dən aşağı üçün */}
-<div className="md:hidden w-full px-4 py-6 bg-[#0f0f10]">
-  <div
-    className="w-full h-[440px] rounded-2xl overflow-hidden relative cursor-pointer"
-    onClick={handleBuyNow}
-  >
-    <img
-      src={activeSlide.mobImg}
-      alt={activeSlide.title}
-      className="w-full h-full object-cover"
-    />
-
-    {/* Wishlist ikon */}
-    <button
-      onClick={(event) => {
-          event.stopPropagation();
-          toggleWishlist();
-        }}
-      className="absolute top-3 right-3 rounded-full p-2 z-10"
-    >
-      {isInWishlist ? (
-        <img src="/icons/check.png" alt="In Wishlist" className="w-5 h-5" />
-      ) : (
-        <img src="/icons/wishlist5.png" alt="In Wishlist" className="w-5 h-5" />
-      )}
-    </button>
-
-    {/* Alt overlay yazılar */}
-    <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90 to-transparent text-white">
-      <img  src={activeSlide.logo} alt={activeSlide.title} className="w-50 h-20"/>
-      <p className="text-[9px] text-white  uppercase  my-2 font-bold">{activeSlide.subtitle}</p>
-      <h2 className="text-base font-semibold mb-1">{activeSlide.title}</h2>
-      <p className="text-sm opacity-90">{activeSlide.description}</p>
-      <p className="mt-2 text-sm font-semibold">{activeSlide.price}</p>
-    </div>
-  </div>
-
-  {/* Pagination dots */}
-  <div className="flex justify-center mt-4 gap-2">
-    {slides.map((_, index) => (
-      <button
-        key={index}
-        onClick={() => setActiveIndex(index)}
-        className={`w-2 h-2 rounded-full transition ${
-          index === activeIndex ? "bg-white" : "bg-gray-400/40"
-        }`}
-      />
-    ))}
-  </div>
-</div>
-
-  </div>
-);
-
-<img src={activeSlide.logo} alt={activeSlide.title} />
+  );
 }
 
 export default Slider;

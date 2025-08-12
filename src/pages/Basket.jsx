@@ -3,11 +3,13 @@ import { useContext, useState, useEffect } from "react";
 import { GameContext } from "../context/DataContext";
 import SearchNav from "../components/SearchNav";
 import { toast } from "react-toastify";
+import OrderModal from "../components/OrderModal";
 
 export default function Basket() {
   const { user, moveToWishlist } = useContext(GameContext);
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   // Load user-specific cart on component mount and when user changes
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function Basket() {
 
               <button
                 onClick={() => navigate("/signin")}
-                className="bg-[#26bbff] hover:bg-[#00aaff] text-black font-semibold px-6 py-2 rounded-md text-sm transition mr-4"
+                className="bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-semibold px-6 py-2 rounded-md text-sm transition mr-4"
               >
                 Log In
               </button>
@@ -306,7 +308,7 @@ export default function Basket() {
                     <span>Subtotal</span>
                     <span>${totalPrice.toFixed(2)}</span>
                   </div>
-                  <button className="w-full bg-[#26bbff] hover:bg-[#00aaff] text-black font-semibold py-2 rounded-md">
+                  <button onClick={() => setShowModal(true)} className="w-full bg-[#26bbff] hover:bg-[#00aaff] text-black font-semibold py-2 rounded-md">
                     Check Out
                   </button>
                 </div>
@@ -315,6 +317,9 @@ export default function Basket() {
           )}
         </div>
       </div>
+      {showModal && (
+        <OrderModal subtotal={totalPrice} userId={user.id} onClose={() => setShowModal(false)} />
+      )}
     </>
   );
 }

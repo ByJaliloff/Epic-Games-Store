@@ -19,6 +19,8 @@ import GamesAdminPanel from "./pages/GamesAdminPanel";
 import Error from "./pages/Error";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import AdminLogin from "./components/AdminLogin";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 
 
@@ -37,12 +39,16 @@ function App() {
         <Route path="news" element={<NewsSection />} />
         <Route path="*" element={<Error />} />
       </Route>
-       <Route path="/admin" element={<AdminLayout />}>
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      <Route path="/admin" element={<ProtectedAdminRoute />}>
+        <Route element={<AdminLayout />}>
           <Route index element={<HomeAdminPanel />} />
           <Route path="slider" element={<SliderAdminPanel />} />
           <Route path="news" element={<NewsAdminPanel />} />
           <Route path="dlcs" element={<DlcAdminPanel />} />
           <Route path="games" element={<GamesAdminPanel />} />
+        </Route>
       </Route>
       <Route path="/signin" element={<Login />} />
       <Route path="/signup" element={<Register />} /> */
