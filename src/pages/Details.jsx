@@ -20,6 +20,9 @@ function Details() {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [isTabChanging, setIsTabChanging] = useState(false);
+  const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0);
+  const [isSliding, setIsSliding] = useState(false);
   
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -155,6 +158,47 @@ function Details() {
     }
   };
 
+  // Thumbnail navigation functions
+  const thumbnailsPerView = 3;
+  const totalThumbnails = (game?.carouselImages?.length || 0) + 1; // +1 for video thumbnail
+  const maxStartIndex = Math.max(0, totalThumbnails - thumbnailsPerView);
+
+  const nextThumbnails = () => {
+    if (isSliding) return; // Prevent rapid clicking during animation
+    setIsSliding(true);
+    setThumbnailStartIndex(prev => 
+      prev >= maxStartIndex ? 0 : prev + 1
+    );
+    setTimeout(() => setIsSliding(false), 300); // Match animation duration
+  };
+
+  const prevThumbnails = () => {
+    if (isSliding) return; // Prevent rapid clicking during animation
+    setIsSliding(true);
+    setThumbnailStartIndex(prev => 
+      prev <= 0 ? maxStartIndex : prev - 1
+    );
+    setTimeout(() => setIsSliding(false), 300); // Match animation duration
+  };
+
+  const getAllThumbnails = () => {
+    return [
+      { type: 'video', index: -1, src: `https://img.youtube.com/vi/${game?.video?.split("v=")[1]}/0.jpg` },
+      ...(game?.carouselImages?.map((img, idx) => ({ type: 'image', index: idx, src: img })) || [])
+    ];
+  };
+
+  // Enhanced tab switching with animation
+  const handleTabChange = (tab) => {
+    if (tab === activeTab) return;
+    
+    setIsTabChanging(true);
+    setTimeout(() => {
+      setActiveTab(tab);
+      setIsTabChanging(false);
+    }, 150);
+  };
+
   // Updated addToCart function to use user-specific cart
   const addToCart = () => {
     if (!user?.id) {
@@ -222,41 +266,72 @@ function Details() {
     else if (rating >= 1.5) starsImage = "/stars/2.png";
     return (
       <div className="flex items-center gap-2 mt-1">
-        <img src={starsImage} alt={`${rating} stars`} className="w-[100px] h-auto" />
+        <img src={starsImage} alt={`${rating} stars`} className="w-[80px] sm:w-[100px] h-auto" />
         <span className="text-white text-sm font-medium">{rating}</span>
       </div>
     );
   }
 
+  // Enhanced video navigation arrows
+  const VideoArrow = ({ direction, onClick }) => (
+    <button 
+      onClick={onClick} 
+      className="absolute top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 z-20 shadow-lg border border-white/20"
+      style={{
+        [direction === 'left' ? 'left' : 'right']: '16px'
+      }}
+    >
+      <div className="flex items-center justify-center">
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          className={`transform ${direction === 'right' ? 'rotate-180' : ''} transition-transform duration-200`}
+        >
+          <path 
+            d="M15 18L9 12L15 6" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    </button>
+  );
+
   return (
     <div className="bg-[#0f0f10] min-h-screen">
       <SearchNav />
-      <div className="max-w-[93%] md:max-w-[82%] mx-auto px-[3.5%] py-8 text-white">
+      <div className="max-w-[95%] sm:max-w-[93%] md:max-w-[90%] lg:max-w-[85%] xl:max-w-[82%] mx-auto px-2 sm:px-4 lg:px-[3.5%] py-6 sm:py-8 text-white">
         <div className="flex flex-col">
-          <h1 className="text-[40px] font-bold mb-2">{game.title}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-bold mb-2 leading-tight">{game.title}</h1>
           {activeTab === "overview" && (
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mt-2">
-              {/* Mobil üçün əvvəl: textlər */}
-              <div className="flex gap-4 text-gray-300 text-sm order-1 md:order-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-2">
+              {/* Features - Show first on mobile */}
+              <div className="flex gap-3 sm:gap-4 text-gray-300 text-xs sm:text-sm order-1 sm:order-2 flex-wrap">
                 <div className="flex items-center gap-1 font-semibold">🌐 Diverse Characters</div>
                 <div className="flex items-center gap-1 font-semibold">📜 Amazing Storytelling</div>
               </div>
 
-              {/* Rating ulduzları */}
-              <div className="order-2 md:order-1">
+              {/* Rating stars */}
+              <div className="order-2 sm:order-1">
                 <RatingStars rating={game.rating} />
               </div>
             </div>
           )}
         </div>
 
-        <nav className="flex gap-6 text-white text-sm mt-6">
+        <nav className="flex gap-4 sm:gap-6 text-white text-sm sm:text-base mt-6 overflow-x-auto scrollbar-hide">
           {["overview", "Add-ons"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-2 text-[16px] font-semibold text-gray-200 ${
-                activeTab === tab ? "border-b-2 border-blue-500 font-medium" : "hover:border-b-2 hover:border-gray-500 hover:text-white"
+              onClick={() => handleTabChange(tab)}
+              className={`pb-2 text-sm sm:text-[16px] font-semibold whitespace-nowrap transition-all duration-300 ${
+                activeTab === tab 
+                  ? "border-b-2 border-blue-500 text-white font-medium" 
+                  : "text-gray-200 hover:border-b-2 hover:border-gray-500 hover:text-white"
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -264,230 +339,308 @@ function Details() {
           ))}
         </nav>
 
-        {activeTab === "overview" && (
-          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-10 mt-10">
-            {/* Sol Panel */}
-            <div className="order-2 lg:order-1 lg:col-span-2 w-full flex flex-col gap-8">
-              {/* Video və Carousel */}
-              <div className="hidden md:flex aspect-video rounded-xl overflow-hidden relative group">
-                {(showVideo || currentIndex === -1) ? (
-                  <ReactPlayer src={game.video} muted playing controls loop width="100%" height="100%" />
-                ) : (
-                  <img
-                    src={getOriginalImageUrl(game.carouselImages[currentIndex])}
-                    alt={`Selected ${currentIndex + 1}`}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                )}
-                <button onClick={prevIndex} className="absolute top-1/2 left-3 -translate-y-1/2 bg-black bg-opacity-50 rounded-full p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">&#8592;</button>
-                <button onClick={nextIndex} className="absolute top-1/2 right-3 -translate-y-1/2 bg-black bg-opacity-50 rounded-full p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">&#8594;</button>
-              </div>
-
-              {/* Thumbnail Scroll */}
-              <div className="hidden md:flex items-center gap-2 mt-2 overflow-x-auto px-1 scrollbar-hide justify-center max-w-[600px] mx-auto">
-                <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
-                <button onClick={prevIndex} className="bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 shrink-0">
-                  <img src="/icons/arrow-left.png" alt="Previous" className="w-5 h-5" />
-                </button>
-                <div className="flex gap-2">
-                  <img
-                    src={`https://img.youtube.com/vi/${game.video?.split("v=")[1]}/0.jpg`}
-                    alt="Video Thumbnail"
-                    className={`w-24 h-16 object-cover rounded-lg cursor-pointer ${currentIndex === -1 ? "brightness-100" : "brightness-50"}`}
-                    onClick={() => handleThumbnailClick(-1)}
-                  />
-                  {game.carouselImages.map((img, idx) => (
+        {/* Content with smooth transition */}
+        <div className={`transition-all duration-300 ${isTabChanging ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+          {activeTab === "overview" && (
+            <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 mt-8 sm:mt-10">
+              {/* Left Panel */}
+              <div className="order-2 xl:order-1 xl:col-span-2 w-full flex flex-col gap-6 sm:gap-8">
+                {/* Video & Carousel - Desktop */}
+                <div className="hidden md:flex aspect-video rounded-xl overflow-hidden relative group shadow-2xl">
+                  {(showVideo || currentIndex === -1) ? (
+                    <ReactPlayer src={game.video} muted playing controls loop width="100%" height="100%" />
+                  ) : (
                     <img
-                      key={idx}
-                      src={img}
-                      alt={`Slide ${idx + 1}`}
-                      className={`w-24 h-16 object-cover rounded-lg cursor-pointer ${currentIndex === idx ? "brightness-100" : "brightness-50"}`}
-                      onClick={() => handleThumbnailClick(idx)}
+                      src={getOriginalImageUrl(game.carouselImages[currentIndex])}
+                      alt={`Selected ${currentIndex + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
                     />
-                  ))}
-                </div>
-                <button onClick={nextIndex} className="bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 shrink-0">
-                  <img src="/icons/arrow-right.png" alt="Next" className="w-5 h-5" />
-                </button>
-              </div>
-              
-              {/* Mobile Thumbnail Slider */}
-              <div className="md:hidden mt-4 relative overflow-hidden">
-                <div
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
-                  onTouchStart={handleTouchStart}
-                  onTouchEnd={handleTouchEnd}
-                >
-                  {/* Digər şəkillər */}
-                  {game.carouselImages.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`Slide ${idx + 1}`}
-                      className="w-full h-48 object-cover flex-shrink-0 cursor-pointer"
-                      onClick={() => handleThumbnailClick(idx)}
-                    />
-                  ))}
+                  )}
+                  <VideoArrow direction="left" onClick={prevIndex} />
+                  <VideoArrow direction="right" onClick={nextIndex} />
                 </div>
 
-                {/* Dots */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                  {[...Array(game.carouselImages.length)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-2 h-2 rounded-full cursor-pointer ${
-                        i === mobileIndex ? "bg-white" : "bg-gray-500"
-                      }`}
-                      onClick={() => setMobileIndex(i)}
-                    />
-                  ))}
+                {/* Thumbnail Scroll - Desktop */}
+                <div className="hidden md:flex items-center gap-4 mt-4 justify-center max-w-[500px] mx-auto">
+                  {/* Left Arrow for Thumbnail Sliding */}
+                  <button 
+                    onClick={prevThumbnails}
+                    disabled={totalThumbnails <= thumbnailsPerView || isSliding}
+                    className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
+                      <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+
+                  {/* Thumbnails Container - With sliding animation */}
+                  <div className="relative w-[300px] h-16 overflow-hidden">
+                    <div 
+                      className="flex gap-3 absolute transition-transform duration-300 ease-in-out"
+                      style={{ 
+                        transform: `translateX(-${thumbnailStartIndex * 108}px)`, // 96px (w-24) + 12px (gap-3) = 108px per thumbnail
+                        width: `${totalThumbnails * 108}px`
+                      }}
+                    >
+                      {getAllThumbnails().map((thumbnail, idx) => (
+                        <img
+                          key={`${thumbnail.type}-${thumbnail.index}`}
+                          src={thumbnail.src}
+                          alt={thumbnail.type === 'video' ? 'Video Thumbnail' : `Slide ${thumbnail.index + 1}`}
+                          className={`w-24 h-16 object-cover rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 shrink-0 ${
+                            (thumbnail.type === 'video' && currentIndex === -1) || 
+                            (thumbnail.type === 'image' && currentIndex === thumbnail.index)
+                              ? "brightness-100 shadow-lg" 
+                              : "brightness-75 hover:brightness-90"
+                          }`}
+                          onClick={() => handleThumbnailClick(thumbnail.index)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Arrow for Thumbnail Sliding */}
+                  <button 
+                    onClick={nextThumbnails}
+                    disabled={totalThumbnails <= thumbnailsPerView || isSliding}
+                    className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
+                      <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                 </div>
-              </div>
+                
+                {/* Mobile Thumbnail Slider */}
+                <div className="md:hidden mt-4 relative overflow-hidden rounded-lg shadow-xl">
+                  <div
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    {game.carouselImages.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={`Slide ${idx + 1}`}
+                        className="w-full h-48 sm:h-56 object-cover flex-shrink-0 cursor-pointer"
+                        onClick={() => handleThumbnailClick(idx)}
+                      />
+                    ))}
+                  </div>
 
-              {/* Short Description */}
-              <p className="text-base text-white">{game.shortDescription}</p>
-
-              {/* Genre və Features */}
-              <div className="flex flex-col md:flex-row gap-6">
-                <div>
-                  <h3 className="text-gray-400 text-sm font-semibold mb-2">Genres</h3>
-                  <div className="flex gap-2 flex-wrap">
-                    {game.genre?.map((g, idx) => (
-                      <span key={idx} className="bg-[#343437] text-sm px-3 py-1 rounded-sm">{g}</span>
+                  {/* Enhanced Dots */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/40 backdrop-blur-sm px-3 py-2 rounded-full">
+                    {[...Array(game.carouselImages.length)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${
+                          i === mobileIndex ? "bg-white scale-125" : "bg-gray-400 hover:bg-gray-300"
+                        }`}
+                        onClick={() => setMobileIndex(i)}
+                      />
                     ))}
                   </div>
                 </div>
-                <div className="md:border-l-2 border-gray-500/30 md:pl-6">
-                  <h3 className="text-gray-400 text-sm font-semibold mb-2">Features</h3>
-                  <div className="flex gap-2 flex-wrap">
-                    {game.features?.map((f, idx) => (
-                      <span key={idx} className="bg-[#343437] text-sm px-3 py-1 rounded-sm">{f}</span>
-                    ))}
+
+                {/* Short Description */}
+                <p className="text-sm sm:text-base text-white leading-relaxed">{game.shortDescription}</p>
+
+                {/* Genre & Features */}
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                  <div className="flex-1">
+                    <h3 className="text-gray-400 text-sm font-semibold mb-3">Genres</h3>
+                    <div className="flex gap-2 flex-wrap">
+                      {game.genre?.map((g, idx) => (
+                        <span key={idx} className="bg-[#343437] hover:bg-[#404043] transition-colors text-xs sm:text-sm px-3 py-1.5 rounded-md">{g}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="lg:border-l-2 border-gray-500/30 lg:pl-6 flex-1">
+                    <h3 className="text-gray-400 text-sm font-semibold mb-3">Features</h3>
+                    <div className="flex gap-2 flex-wrap">
+                      {game.features?.map((f, idx) => (
+                        <span key={idx} className="bg-[#343437] hover:bg-[#404043] transition-colors text-xs sm:text-sm px-3 py-1.5 rounded-md">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full Description */}
+                {game.fullDescription?.map((section, idx) => (
+                  <div key={idx} className="mt-6">
+                    <h2 className="text-lg sm:text-xl font-bold mb-3">{section.heading}</h2>
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">{section.content}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Right Panel */}
+              <div className="order-1 xl:order-2 w-full flex flex-col gap-4 sm:gap-5">
+                <div className="flex justify-center">
+                  <img src={game.logo} alt={`${game.title} Logo`} className="h-32 sm:h-40 object-contain max-w-full" />
+                </div>
+
+                <p className="inline-block max-w-max text-xs sm:text-sm text-white px-2 py-1 bg-gray-600 rounded mx-auto xl:mx-0">
+                  {typeMapping[game.type?.toLowerCase()] || "Unknown"}
+                </p>
+
+                {/* Price Section */}
+                <div className="text-center xl:text-left">
+                  {isFree ? (
+                    <span className="text-white font-semibold text-lg sm:text-xl">Free</span>
+                  ) : game.discount ? (
+                    <div className="flex items-center justify-center xl:justify-start gap-3 sm:gap-4 flex-wrap">
+                      <span className="bg-blue-600 text-xs sm:text-sm px-2 py-1 rounded-full">-{game.discount}%</span>
+                      <span className="line-through text-gray-400 text-sm sm:text-base">${originalPrice.toFixed(2)}</span>
+                      <span className="text-white font-semibold text-base">${discountedPrice}</span>
+                    </div>
+                  ) : (
+                    <span className="text-white font-semibold text-base">${originalPrice.toFixed(2)}</span>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div className="space-y-3">
+                  <button className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg">
+                    {isFree ? "Get" : game.releaseDate?.toLowerCase() === "upcoming" ? "Pre-purchase" : "Buy Now"}
+                  </button>
+
+                  {isInCart ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/basket")}
+                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      View in Cart
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={addToCart}
+                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      Add To Cart
+                    </button>
+                  )}
+
+                  {isInWishlist ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/wishlist")}
+                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      View in Wishlist
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={addToWishlist}
+                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      Add to Wishlist
+                    </button>
+                  )}
+                </div>
+
+                {/* Technical Information */}
+                <div className="mt-6 text-xs sm:text-sm text-white pt-4 space-y-3 sm:space-y-4">
+                  <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
+                    <span className="text-gray-400">Developer</span>
+                    <span className="text-right max-w-[60%] truncate">{game.developer || "Unknown"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
+                    <span className="text-gray-400">Publisher</span>
+                    <span className="text-right max-w-[60%] truncate">{game.publisher || "Unknown"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
+                    <span className="text-gray-400">Release Date</span>
+                    <span className="text-right">{game.releaseDate || "TBA"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
+                    <span className="text-gray-400">Platform</span>
+                    <div className="flex items-center gap-2">
+                      {game.platforms?.map((platform, index) => (
+                        <div key={index} className="group relative">
+                          {platformIcons[platform] && (
+                            <>
+                              <img
+                                src={platformIcons[platform]}
+                                alt={platform}
+                                className="w-4 h-4 sm:w-5 sm:h-5 hover:scale-110 transition-transform duration-200"
+                              />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                {platform}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Full Description */}
-              {game.fullDescription?.map((section, idx) => (
-                <div key={idx} className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">{section.heading}</h2>
-                  <p className="text-gray-300">{section.content}</p>
-                </div>
-              ))}
             </div>
+          )}
 
-            {/* Sağ Panel */}
-            <div className="order-1 lg:order-2 w-full lg:w-[400px] flex flex-col gap-4">
-              <img src={game.logo} alt={`${game.title} Logo`} className="h-40 object-contain" />
-
-              <p className="inline-block max-w-max text-sm text-white px-2 py-0.5 bg-gray-600 rounded">
-                {typeMapping[game.type?.toLowerCase()] || "Unknown"}
-              </p>
-
-              {/* Price Section */}
-              {isFree ? (
-                <span className="text-[#ffffff] font-semibold text-lg">Free</span>
-              ) : game.discount ? (
-                <div className="flex items-center gap-4">
-                  <span className="bg-blue-600 text-sm px-2 py-1 rounded-full">-{game.discount}%</span>
-                  <span className="line-through text-gray-400">${originalPrice.toFixed(2)}</span>
-                  <span className="text-white font-semibold">${discountedPrice}</span>
+          {activeTab === "Add-ons" && (
+            <div className="mt-8 sm:mt-10">
+              {relatedDlcs.length === 0 ? (
+                <div className="text-center py-12 sm:py-16">
+                  <div className="text-6xl sm:text-8xl mb-4 opacity-20">🎮</div>
+                  <p className="text-gray-400 text-lg sm:text-xl">No add-ons or editions found for this game.</p>
+                  <p className="text-gray-500 text-sm sm:text-base mt-2">Check back later for new content!</p>
                 </div>
               ) : (
-                <span className="text-white font-semibold">${originalPrice.toFixed(2)}</span>
-              )}
-
-              {/* Buttons */}
-              <button className="bg-[#1e90ff] hover:bg-blue-500 text-white py-3 rounded-md font-semibold">
-                {isFree ? "Get" : game.releaseDate?.toLowerCase() === "upcoming" ? "Pre-purchase" : "Buy Now"}
-              </button>
-
-              {isInCart ? (
-                <button
-                  type="button"
-                  onClick={() => navigate("/basket")}
-                  className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
-                >
-                  View in Cart
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={addToCart}
-                  className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
-                >
-                  Add To Cart
-                </button>
-              )}
-
-              {isInWishlist ? (
-                <button
-                  type="button"
-                  onClick={() => navigate("/wishlist")}
-                  className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
-                >
-                  View in Wishlist
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={addToWishlist}
-                  className="bg-gray-700 hover:bg-[#636366] text-white py-3 rounded-md font-semibold"
-                >
-                  Add to Wishlist
-                </button>
-              )}
-
-              {/* Texniki Məlumatlar */}
-              <div className="mt-4 text-sm text-white pt-4 space-y-2">
-                <div className="flex justify-between border-b border-gray-600 pb-4 font-semibold">
-                  <span className="text-gray-400">Developer</span>
-                  <span>{game.developer || "Unknown"}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-600 pb-4 font-semibold">
-                  <span className="text-gray-400">Publisher</span>
-                  <span>{game.publisher || "Unknown"}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-600 pb-4 font-semibold">
-                  <span className="text-gray-400">Release Date</span>
-                  <span>{game.releaseDate || "TBA"}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-600 pb-4 font-semibold">
-                  <span className="text-gray-400">Platform</span>
-                  <div className="flex items-center gap-2">
-                    {game.platforms?.map((platform, index) => (
-                      <div key={index}>
-                        {platformIcons[platform] && (
-                          <img
-                            src={platformIcons[platform]}
-                            alt={platform}
-                            className="w-4 h-4"
-                          />
-                        )}
+                <>
+                  <div className="mb-6 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-2">Available Add-ons</h2>
+                    <p className="text-gray-400 text-sm sm:text-base">Expand your gaming experience with these additional content</p>
+                  </div>
+                  <div className="grid grid-cols-1 min-[375px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 justify-items-center">
+                    {relatedDlcs.map((dlcItem, index) => (
+                      <div
+                        key={dlcItem.id}
+                        className="w-full animate-fade-in-up"
+                        style={{
+                          animationDelay: `${index * 0.1}s`,
+                          animationFillMode: 'both'
+                        }}
+                      >
+                        <GameCard game={dlcItem} />
                       </div>
                     ))}
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
-          </div>
-        )}
-
-        {activeTab === "Add-ons" && (
-          <div className="mt-10">
-            {relatedDlcs.length === 0 ? (
-              <p className="text-gray-400">No add-ons or editions found for this game.</p>
-            ) : (
-              <div className="grid grid-cols-1 min-[375px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
-                {relatedDlcs.map((dlcItem) => (
-                  <GameCard key={dlcItem.id} game={dlcItem} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
+      
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

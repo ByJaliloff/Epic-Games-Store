@@ -92,7 +92,7 @@ export default function OrderModal({ subtotal, onClose, userId }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-600/30 backdrop-blur-lg z-70">
-      <div className="bg-white w-[480px] max-h-[90vh] overflow-hidden shadow-2xl">
+      <div className="bg-[#F2F2F2] w-[480px] max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">ORDER SUMMARY</h2>
@@ -225,7 +225,7 @@ export default function OrderModal({ subtotal, onClose, userId }) {
 
 
           {/* Terms */}
-          <div className="px-6 py-3 text-xs text-gray-600 border-t border-gray-200">
+          <div className="px-6 py-3 text-xs text-gray-600 border-t border-gray-200 font-semibold">
             <p className="mb-2">
               You are purchasing a digital license for this product. For full terms, see{" "}
               <a href="#" className="text-blue-600 hover:underline">
