@@ -118,20 +118,19 @@ const handleAddToCartAndNavigate = () => {
       <img
         src={game.image}
         alt={game.title}
-        className="w-full h-[full] object-cover"
+        className="w-full h-[full] object-cover group-hover:scale-105 transition-transform duration-300"
       />
       {/* Wishlist Button */}
       <div
         className={`
-          absolute top-2 right-2
-          transition-opacity duration-300
-          sm:opacity-0 sm:group-hover:opacity-100 
-          opacity-100
+          absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300
         `}
       >
         <div className="relative group/icon">
           <div
-            className="w-9 h-9 rounded-full hover:bg-white/30 flex items-center justify-center hover:bg-white/30 cursor-pointer"
+           className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center hover:bg-white/30 cursor-pointer transition-all duration-300 ${
+                        isInWishlist ? "animate-pulse bg-white/20" : ""
+                      }`}
             onClick={(e) => handleWishlist(e)}
           >
             <img
@@ -139,7 +138,7 @@ const handleAddToCartAndNavigate = () => {
                 isInWishlist ? "/icons/check.png" : "/icons/wishlist5.png"
               }
               alt="wishlist"
-              className="w-6 h-6"
+              className="w-5 h-5 md:w-6 md:h-6"
             />
           </div>
 
