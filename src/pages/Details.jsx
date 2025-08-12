@@ -25,15 +25,23 @@ function Details() {
   const touchEndX = useRef(null);
 
   // ALL useEffect hooks must also be declared before any conditional returns
-  // Cart and wishlist effect
+  // Cart and wishlist effect - Updated to use user-specific cart
   useEffect(() => {
     if (!games?.length || !id) return;
     
     const game = games.find((g) => g.id === id);
     if (!game) return;
     
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user?.id}`)) || [];
+    // If user is not logged in, reset cart and wishlist status
+    if (!user?.id) {
+      setIsInCart(false);
+      setIsInWishlist(false);
+      return;
+    }
+    
+    // Updated cart to be user-specific like wishlist
+    const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
+    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
     setIsInCart(cart.some((item) => item.id === game.id));
     setIsInWishlist(wishlist.some((item) => item.id === game.id));
   }, [games, id, user?.id]);
@@ -147,13 +155,19 @@ function Details() {
     }
   };
 
+  // Updated addToCart function to use user-specific cart
   const addToCart = () => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    if (!user?.id) {
+      toast.error("Please log in to add items to cart");
+      return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
     const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
 
     if (!cart.find((item) => item.id === game.id)) {
       const updatedCart = [...cart, game];
-      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      localStorage.setItem(`cart_${user.id}`, JSON.stringify(updatedCart));
       setIsInCart(true);
 
       toast.success(
@@ -167,6 +181,7 @@ function Details() {
       );
     }
 
+    // Remove from wishlist if adding to cart
     if (wishlist.find((item) => item.id === game.id)) {
       const updatedWishlist = wishlist.filter((item) => item.id !== game.id);
       localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
@@ -175,6 +190,11 @@ function Details() {
   };
 
   const addToWishlist = () => {
+    if (!user?.id) {
+      toast.error("Please log in to add items to wishlist");
+      return;
+    }
+
     const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
 
     if (!wishlist.find((item) => item.id === game.id)) {

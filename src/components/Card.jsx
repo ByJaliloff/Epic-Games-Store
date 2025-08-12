@@ -64,16 +64,26 @@ const handleWishlist = (item, e) => {
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
   };
 
-  const handleAddToCartAndNavigate = (item, e) => {
-    e.preventDefault();
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const exists = cart.find((i) => i.id === item.id);
-    if (!exists) {
-      cart.push(item);
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-    navigate("/basket");
-  };
+const handleAddToCartAndNavigate = (item, e) => {
+  e.preventDefault();
+
+  if (!user?.id) {
+    toast.error("Please log in to add items to your cart");
+    return;
+  }
+
+  const cartKey = `cart_${user.id}`;
+  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+  const exists = cart.find((i) => i.id === item.id);
+
+  if (!exists) {
+    cart.push(item);
+    localStorage.setItem(cartKey, JSON.stringify(cart));
+  }
+
+  navigate("/basket");
+};
+
 
   const [startIndexes, setStartIndexes] = useState({
     discover: 0,

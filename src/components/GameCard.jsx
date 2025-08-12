@@ -80,15 +80,24 @@ export default function GameCard({ game }) {
   };
 
 
-  const handleAddToCartAndNavigate = () => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const exists = cart.find((i) => i.id === game.id);
-    if (!exists) {
-      cart.push(game);
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-    navigate("/basket");
-  };
+const handleAddToCartAndNavigate = () => {
+  if (!user?.id) {
+    toast.error("Please log in to add items to your cart");
+    return;
+  }
+
+  const cartKey = `cart_${user.id}`;
+  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+  const exists = cart.find((i) => i.id === game.id);
+
+  if (!exists) {
+    cart.push(game);
+    localStorage.setItem(cartKey, JSON.stringify(cart));
+  }
+
+  navigate("/basket");
+};
+
 
   const isDiscounted = game.discount && game.discount > 0;
   const isFree = game.price === "Free" || game.price === 0 || game.isFree === true;

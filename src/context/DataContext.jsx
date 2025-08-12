@@ -70,8 +70,8 @@ export function GameProvider({ children }) {
 
   // Səbətdən istəyə köçürmək funksiyası
   const moveToWishlist = (item) => {
-    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+    const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
 
     const isInWishlist = wishlist.some((w) => w.id === item.id);
     if (!isInWishlist) {
@@ -79,8 +79,8 @@ export function GameProvider({ children }) {
     }
 
     const updatedCart = cart.filter((c) => c.id !== item.id);
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(wishlist));
+    localStorage.setItem(`cart_${user.id}`, JSON.stringify(updatedCart));
     window.location.reload();
   };
   

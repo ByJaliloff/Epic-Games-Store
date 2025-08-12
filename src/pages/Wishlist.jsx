@@ -77,12 +77,18 @@ const removeFromWishlist = (id) => {
 
 
 const addToCart = (item) => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  if (!user?.id) {
+    toast.error("Please log in to add items to your cart");
+    return;
+  }
+
+  const cartKey = `cart_${user.id}`;
+  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
   const exists = cart.find((i) => i.id === item.id);
 
   if (!exists) {
     cart.push(item);
-    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem(cartKey, JSON.stringify(cart));
 
     toast.success(
       <div className="flex items-center gap-3">
@@ -100,12 +106,12 @@ const addToCart = (item) => {
   }
 };
 
-
-  const isInCart = (id) => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const isInCart = (id) => {
+  if (!user?.id) return false;
+  const cartKey = `cart_${user.id}`;
+  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
   return cart.some((item) => item.id === id);
 };
-
 
   return (
     <>
