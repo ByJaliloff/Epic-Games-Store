@@ -570,9 +570,6 @@ function Details() {
                                 alt={platform}
                                 className="w-4 h-4 sm:w-5 sm:h-5 hover:scale-110 transition-transform duration-200"
                               />
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                {platform}
-                              </div>
                             </>
                           )}
                         </div>
