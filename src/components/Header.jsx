@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiGlobe } from "react-icons/fi";
 import { GameContext } from "../context/DataContext";
+import "../header.css";
 
 function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -26,8 +27,7 @@ function Header() {
     };
   }, [isMobileMenuOpen, epicMobileMenuOpen]);
 
-
-  // Click outside bağlama
+  // Click outside bağlama - Fixed for user menu
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -51,20 +51,23 @@ function Header() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    // Only add event listeners when menus are open
+    if (isDropdownOpen || isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
     window.addEventListener("resize", handleResize);
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isDropdownOpen, isUserMenuOpen]); // Added dependencies
 
   const closeMobileMenu = () => {
-  setIsMobileMenuOpen(false);
-  setIsUserMenuOpen(false); // dashboard-u da bağla
-};
-
-
+    setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
+  };
 
   return (
     <header className="bg-[#131317] text-white h-[72px] shadow-md relative z-60">
@@ -73,24 +76,23 @@ function Header() {
         <div className="flex items-center space-x-6">
           {/* Epic logo + dropdown */}
           <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => {
-              if (window.innerWidth < 768) {
-                setEpicMobileMenuOpen(true); // Mobil versiya üçün yeni menyu açılsın
-              } else {
-                setIsDropdownOpen((prev) => !prev); // Desktop versiyada əvvəlki kimi işləsin
-              }
-            }}
-            className="flex items-center space-x-1 p-[6px] rounded cursor-pointer"
-          >
-            <img
-              src="/icons/epic-logo.png"
-              alt="Epic Games Logo"
-              className="w-7 h-8"
-            />
-            <span className="text-base ml-1">{isDropdownOpen ? "▴" : "▾"}</span>
-          </button>
-
+            <button
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  setEpicMobileMenuOpen(true);
+                } else {
+                  setIsDropdownOpen((prev) => !prev);
+                }
+              }}
+              className="flex items-center space-x-1 p-[6px] rounded cursor-pointer"
+            >
+              <img
+                src="/icons/epic-logo.png"
+                alt="Epic Games Logo"
+                className="w-7 h-8"
+              />
+              <span className="text-base ml-1">{isDropdownOpen ? "▴" : "▾"}</span>
+            </button>
 
             {/* Dropdown menyusu */}
             {isDropdownOpen && (
@@ -130,105 +132,114 @@ function Header() {
                 </div>
               </div>
             )}
+
+            {/* Epic Mobile Menu - With animations */}
             {epicMobileMenuOpen && (
-          <div className="fixed inset-0 bg-[#101014] text-white z-50 flex flex-col px-4 h-screen overflow-y-auto">
-            {/* Top Bar */}
-            <div className="flex justify-between items-center ">
-              <div className="flex items-center space-x-2 h-[72px]">
-                <img src="/icons/epic-logo.png" alt="Epic Games Logo" className="w-7 h-8" />
-                <span className="text-base ml-1" onClick={() => setEpicMobileMenuOpen(false)}>{epicMobileMenuOpen ? "▴" : "▾"}</span>
-              </div>
-              <button onClick={() => setEpicMobileMenuOpen(false)} className="text-2xl">✕</button>
-            </div>
-
-            {/* Play section */}
-            <div className="py-4 flex flex-col gap-8">
-             <h2 className="text-[32px] font-extrabold">Epic Games</h2>
-            <div>
-              <h3 className="text-xl font-bold mb-4">Play</h3>
-              <ul className="text-base font-medium">
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/fortnite.svg" className="w-5 h-5" />
-                  <span>Fortnite</span>
-                </li>
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/Logo Rocket League Icon.svg" className="w-5 h-5" />
-                  <span>Rocket League</span>
-                </li>
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/Fallguys.svg" className="w-5 h-5" />
-                  <span>Fall Guys</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Discover section */}
-            <div>
-              <h3 className="text-xl font-bold mb-4">Discover</h3>
-              <ul className="text-base font-medium">
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/epic-logo.png" className="w-5 h-5" />
-                  <span>Epic Games Store</span>
-                </li>
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/Logo Fab Icon.svg" className="w-5 h-5" />
-                  <span>Fab</span>
-                </li>
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/LSketchfab.svg" className="w-5 h-5" />
-                  <span>Sketchfab</span>
-                </li>
-                <li className="flex items-center gap-3 py-3 px-2">
-                  <img src="/icons/ArtStation.svg" className="w-5 h-5" />
-                  <span>ArtStation</span>
-                </li>
-              </ul>
-            </div>
-              <div>
-                  <h3 className="text-xl font-bold mb-4">Create</h3>
-                  <ul className="text-base font-medium">
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/unreal.svg" className="w-5 h-5" />
-                      <span>Unreal Engine</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/fortnite.svg" className="w-5 h-5" />
-                      <span>Create in Fortnite</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/Metahuman.svg" className="w-5 h-5" />
-                      <span>MetaHuman</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/Twinmotion.svg" className="w-5 h-5" />
-                      <span>Twinmotion</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/Reality.can.svg" className="w-5 h-5" />
-                      <span>RealityScan</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/epic-logo.png" className="w-5 h-5" />
-                      <span>Epic Online Services</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/epic-logo.png" className="w-5 h-5" />
-                      <span>Publish on Epic Games Store</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/Webservice.svg" className="w-5 h-5" />
-                      <span>Kids Web Services</span>
-                    </li>
-                    <li className="flex items-center gap-3 py-3 px-2">
-                      <img src="/icons/epic-logo.png" className="w-5 h-5" />
-                      <span>Developer Community</span>
-                    </li>
-                  </ul>
+              <div className="fixed inset-0 bg-[#101014] text-white z-50 flex flex-col px-4 h-screen overflow-y-auto animate-slideInDown">
+                {/* Top Bar */}
+                <div className="flex justify-between items-center animate-fadeInDown">
+                  <div className="flex items-center space-x-2 h-[72px]">
+                    <img src="/icons/epic-logo.png" alt="Epic Games Logo" className="w-7 h-8" />
+                    <span className="text-base ml-1" onClick={() => setEpicMobileMenuOpen(false)}>
+                      {epicMobileMenuOpen ? "▴" : "▾"}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setEpicMobileMenuOpen(false)} 
+                    className="text-2xl hover:text-red-400 transition-colors duration-200 transform hover:rotate-90"
+                  >
+                    ✕
+                  </button>
                 </div>
-          </div>
-          </div>
-        )}
 
+                {/* Content sections with staggered animations */}
+                <div className="py-4 flex flex-col gap-8">
+                  <h2 className="text-[32px] font-extrabold animate-fadeInLeft">Epic Games</h2>
+                  
+                  <div className="animate-fadeInLeft delay-100">
+                    <h3 className="text-xl font-bold mb-4">Play</h3>
+                    <ul className="text-base font-medium">
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-200">
+                        <img src="/icons/fortnite.svg" className="w-5 h-5" />
+                        <span>Fortnite</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-300">
+                        <img src="/icons/Logo Rocket League Icon.svg" className="w-5 h-5" />
+                        <span>Rocket League</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-400">
+                        <img src="/icons/Fallguys.svg" className="w-5 h-5" />
+                        <span>Fall Guys</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="animate-fadeInLeft delay-200">
+                    <h3 className="text-xl font-bold mb-4">Discover</h3>
+                    <ul className="text-base font-medium">
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-500">
+                        <img src="/icons/epic-logo.png" className="w-5 h-5" />
+                        <span>Epic Games Store</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-600">
+                        <img src="/icons/Logo Fab Icon.svg" className="w-5 h-5" />
+                        <span>Fab</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-700">
+                        <img src="/icons/LSketchfab.svg" className="w-5 h-5" />
+                        <span>Sketchfab</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-800">
+                        <img src="/icons/ArtStation.svg" className="w-5 h-5" />
+                        <span>ArtStation</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="animate-fadeInLeft delay-300">
+                    <h3 className="text-xl font-bold mb-4">Create</h3>
+                    <ul className="text-base font-medium">
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-900">
+                        <img src="/icons/unreal.svg" className="w-5 h-5" />
+                        <span>Unreal Engine</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1000">
+                        <img src="/icons/fortnite.svg" className="w-5 h-5" />
+                        <span>Create in Fortnite</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1100">
+                        <img src="/icons/Metahuman.svg" className="w-5 h-5" />
+                        <span>MetaHuman</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1200">
+                        <img src="/icons/Twinmotion.svg" className="w-5 h-5" />
+                        <span>Twinmotion</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1300">
+                        <img src="/icons/Reality.can.svg" className="w-5 h-5" />
+                        <span>RealityScan</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1400">
+                        <img src="/icons/epic-logo.png" className="w-5 h-5" />
+                        <span>Epic Online Services</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1500">
+                        <img src="/icons/epic-logo.png" className="w-5 h-5" />
+                        <span>Publish on Epic Games Store</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1600">
+                        <img src="/icons/Webservice.svg" className="w-5 h-5" />
+                        <span>Kids Web Services</span>
+                      </li>
+                      <li className="flex items-center gap-3 py-3 px-2 hover:bg-gray-800/50 rounded-md transition-colors duration-200 animate-slideInLeft delay-1700">
+                        <img src="/icons/epic-logo.png" className="w-5 h-5" />
+                        <span>Developer Community</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Store logo */}
@@ -254,12 +265,12 @@ function Header() {
           </button>
 
           {user ? (
-            <div className="relative " ref={userMenuRef}>
+            <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="hidden md:flex items-center gap-2  px-3 py-2 rounded hover:text-gray-300 transition"
+                className="hidden md:flex items-center gap-2 px-3 py-2 rounded hover:text-gray-300 transition"
               >
-                <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black  font-bold rounded-full">
+                <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black font-bold rounded-full">
                   {user.firstName.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-sm font-semibold">
@@ -269,29 +280,19 @@ function Header() {
 
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2">
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
+                  <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     My Achievement
                   </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
+                  <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     Epic Rewards
                   </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
+                  <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     Account Balance
                   </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
+                  <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     Coupons
                   </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
+                  <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     Redeem Code
                   </Link>
                   <Link
@@ -301,17 +302,17 @@ function Header() {
                     Wishlist
                   </Link>
                   {user && (
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                >
-                  Sign out
-                </button>
-              )}
-                 </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-base text-red-500 font-semibold hover:bg-[#48484B] rounded-md"
+                    >
+                      Sign out
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : (
@@ -340,118 +341,111 @@ function Header() {
         </div>
       </div>
 
-      {/* Mobil menyu overlay */}
-{isMobileMenuOpen && (
-  <div className="fixed inset-0 bg-[#101014] text-white z-50 p-4 pt-0">
-    {/* Top header */}
-    <div className="flex justify-between items-center h-[72px]">
-      <img src="/icons/store.svg" alt="Store"  onClick={() => setIsMobileMenuOpen(false)} className="w-14 h-14" />
-      <div className="flex items-center gap-4">
-        <a
-          href="https://store.epicgames.com/en-US/download"
-          className="bg-[#26bbff] text-black font-semibold text-sm px-2 py-1.5 rounded hover:bg-[#00aaff] w-fit"
-        >
-          Download
-        </a>
-        <button
-          className="text-2xl"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-        <div className="flex justify-end mt-auto h-[44px]">
-      <div className="flex items-center gap-3">
-        <button className="text-white">
-          <FiGlobe className="w-5 h-5" />
-        </button>
-        {user ? (
-            <div className="relative " ref={userMenuRef}>
-              <button
-                onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="md:hidden flex items-center gap-2  px-3 py-2 rounded hover:text-gray-300 transition"
+      {/* Mobil menyu overlay - With animations */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-[#101014] text-white z-50 p-4 pt-0 animate-slideInDown">
+          {/* Top header */}
+          <div className="flex justify-between items-center h-[72px] animate-fadeInDown">
+            <img 
+              src="/icons/store.svg" 
+              alt="Store" 
+              onClick={() => setIsMobileMenuOpen(false)} 
+              className="w-14 h-14 cursor-pointer" 
+            />
+            <div className="flex items-center gap-4">
+              <a
+                href="https://store.epicgames.com/en-US/download"
+                className="bg-[#26bbff] text-black font-semibold text-sm px-2 py-1.5 rounded hover:bg-[#00aaff] w-fit transition"
               >
-                <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black  font-bold rounded-full">
-                  {user.firstName.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm font-semibold">
-                  {user.firstName}
-                </span>
+                Download
+              </a>
+              <button
+                className="text-2xl hover:text-red-400 transition-colors duration-200 transform hover:rotate-90"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                ✕
               </button>
+            </div>
+          </div>
 
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2">
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    My Achievement
-                  </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Epic Rewards
-                  </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Account Balance
-                  </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Coupons
-                  </Link>
-                  <Link
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Redeem Code
-                  </Link>
-                  <Link
-                    onClick={closeMobileMenu}
-                    to="/wishlist"
-                    className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
-                  >
-                    Wishlist
-                  </Link>
+          <div className="flex justify-end mt-auto h-[44px] animate-fadeInUp">
+            <div className="flex items-center gap-3">
+              <button className="text-white">
+                <FiGlobe className="w-5 h-5" />
+              </button>
+              {user ? (
+                <div className="relative" ref={userMenuRef}>
                   <button
-                    onClick={() => {
-                      logout()
-                       closeMobileMenu();
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md"
+                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                    className="md:hidden flex items-center gap-2 px-3 py-2 rounded hover:text-gray-300 transition"
                   >
-                    Sign out
+                    <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black font-bold rounded-full">
+                      {user.firstName.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {user.firstName}
+                    </span>
                   </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2 animate-fadeInDown">
+                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
+                        My Achievement
+                      </Link>
+                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
+                        Epic Rewards
+                      </Link>
+                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
+                        Account Balance
+                      </Link>
+                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
+                        Coupons
+                      </Link>
+                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
+                        Redeem Code
+                      </Link>
+                      <Link
+                        onClick={closeMobileMenu}
+                        to="/wishlist"
+                        className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200"
+                      >
+                        Wishlist
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          closeMobileMenu();
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-red-500 font-semibold text-base hover:bg-[#48484B] rounded-md transition-all duration-200"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <Link
+                  to="/signin"
+                  className="bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
+                >
+                  Sign in
+                </Link>
               )}
             </div>
-          ) : (
-            <Link
-              to="/signin"
-              className=" bg-[#2a2a2a] text-white text-sm px-3 py-2 rounded hover:bg-[#3a3a3a] transition"
-            >
-              Sign in
+          </div>
+
+          {/* Menu links */}
+          <div className="flex flex-col mb-6 pt-4 animate-fadeInLeft">
+            <h3 className="text-[32px] font-bold mb-6">Menu</h3>
+            <Link className="hover:text-gray-300 text-base font-semibold p-[12px_8px] hover:bg-gray-700/50 rounded-md transition-all duration-200 animate-slideInLeft delay-100">
+              Support
             </Link>
-          )}
-      </div>
-    </div>
-
-    {/* Menu links */}
-    <div className="flex flex-col  mb-6 pt-4">
-      <h3 className="text-[32px] font-bold mb-6">Menu</h3>
-      <Link className="hover:text-gray-300 text-base font-semibold p-[12px_8px]">Support</Link>
-      <Link className="hover:text-gray-300 flex justify-between text-base font-semibold p-[12px_8px]">
-        Distribute <span>›</span>
-      </Link>
-    </div>
-
-    {/* Language and Sign In aligned right */}
-  </div>
-)}
-
-
-
+            <Link className="hover:text-gray-300 flex justify-between text-base font-semibold p-[12px_8px] hover:bg-gray-700/50 rounded-md transition-all duration-200 animate-slideInLeft delay-200">
+              Distribute <span>›</span>
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -154,7 +154,7 @@ return (
     </button>
 
     {isOpen && (
-      <div className="absolute top-full left-[48%] -translate-x-[46%] mt-8 w-screen px-4 z-50">
+      <div className="absolute top-full left-[48%] -translate-x-[46%] mt-7 w-screen px-4 z-50">
         <div className="bg-[#101014] rounded-none shadow-lg p-[27px_32px] w-full flex flex-col items-center">
           <Link
             to="/"

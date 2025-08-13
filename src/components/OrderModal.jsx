@@ -2,7 +2,7 @@ import { useContext, useState, useMemo, useEffect } from "react";
 import { GameContext } from "../context/DataContext";
 import { processOrder } from "../service.js/OrderService";
 
-export default function OrderModal({ subtotal, onClose, userId }) {
+export default function OrderModal({ subtotal, onClose, userId, game }) {
   const { games, dlcs } = useContext(GameContext);
   const [promoCode, setPromoCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -10,35 +10,42 @@ export default function OrderModal({ subtotal, onClose, userId }) {
   const [isLoading, setIsLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState(null);
 
-  useEffect(() => {
-    if (!userId || games.length === 0 || dlcs.length === 0) return;
+useEffect(() => {
+  if (game) {
+    setCartItems([game]); // yalnız bu oyunu göstər
+    return;
+  }
 
-    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+  // Əvvəlki səbət loqikası (Basket üçün)
+  if (!userId || games.length === 0 || dlcs.length === 0) return;
 
-    const items = savedCart
-      .map((item) => {
-        if (item && item.id) {
-          const foundGame = games.find((g) => String(g.id) === String(item.id));
-          if (foundGame) return foundGame;
-          
-          const foundDlc = dlcs.find((d) => String(d.id) === String(item.id));
-          if (foundDlc) return foundDlc;
-        }
+  const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+
+  const items = savedCart
+    .map((item) => {
+      if (item && item.id) {
+        const foundGame = games.find((g) => String(g.id) === String(item.id));
+        if (foundGame) return foundGame;
         
-        if (typeof item === "string") {
-          const foundGame = games.find((g) => String(g.id) === String(item));
-          if (foundGame) return foundGame;
-          
-          const foundDlc = dlcs.find((d) => String(d.id) === String(item));
-          if (foundDlc) return foundDlc;
-        }
+        const foundDlc = dlcs.find((d) => String(d.id) === String(item.id));
+        if (foundDlc) return foundDlc;
+      }
+      
+      if (typeof item === "string") {
+        const foundGame = games.find((g) => String(g.id) === String(item));
+        if (foundGame) return foundGame;
         
-        return null;
-      })
-      .filter(Boolean);
+        const foundDlc = dlcs.find((d) => String(d.id) === String(item));
+        if (foundDlc) return foundDlc;
+      }
+      
+      return null;
+    })
+    .filter(Boolean);
 
-    setCartItems(items);
-  }, [userId, games, dlcs]);
+  setCartItems(items);
+}, [game, userId, games, dlcs]);
+
 
   const handlePromoApply = () => {
     if (promoCode.trim().toLowerCase() === "orxan50") {

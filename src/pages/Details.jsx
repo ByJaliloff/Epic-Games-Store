@@ -7,6 +7,7 @@ import GameCard from "../components/GameCard";
 import { toast } from "react-toastify";
 import Error from "./Error";
 import Loader from "../components/Loader";
+import OrderModal from "../components/OrderModal";
 
 function Details() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ function Details() {
   const [isTabChanging, setIsTabChanging] = useState(false);
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -503,7 +505,7 @@ function Details() {
 
                 {/* Buttons */}
                 <div className="space-y-3">
-                  <button className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg">
+                  <button className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg" onClick={() => setShowModal(true)}>
                     {isFree ? "Get" : game.releaseDate?.toLowerCase() === "upcoming" ? "Pre-purchase" : "Buy Now"}
                   </button>
 
@@ -638,7 +640,16 @@ function Details() {
           animation: fade-in-up 0.6s ease-out;
         }
       `}</style>
-    </div>
+              {showModal && (
+                      <OrderModal game={game}  subtotal={
+                  isFree
+                    ? 0
+                    : game.discount
+                      ? parseFloat(discountedPrice)
+                      : parseFloat(originalPrice)
+                }  onClose={() => setShowModal(false)} />
+                                  )}
+                   </div>
   );
 }
 

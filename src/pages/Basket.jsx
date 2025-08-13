@@ -283,7 +283,7 @@ export default function Basket() {
                         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                           <button
                             onClick={() => removeFromCart(item)}
-                            className="text-[#ffffffa6] font-semibold hover:text-red-400 transition text-sm text-left underline"
+                            className="text-red-400 md:text-[#ffffffa6] font-semibold hover:text-red-400 transition text-sm text-left"
                           >
                             Remove from Cart
                           </button>
