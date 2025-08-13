@@ -1,4 +1,4 @@
-import { FiSearch,  FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiChevronDown } from "react-icons/fi";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { IoCartOutline } from "react-icons/io5";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -58,7 +58,7 @@ export default function SearchNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-return (
+  return (
   <div className="bg-[#0f0f10] sticky top-0 h-[80px] md:h-[100px] z-50">
     <div className="px-[3.5%] py-4 flex items-center h-full justify-between max-w-[95%] md:max-w-[82%] mx-auto relative">
       {/* Sol (search + nav links) */}
@@ -78,16 +78,17 @@ return (
             onKeyDown={handleSearch}
           />
         </div>
+
           <div className="md:hidden flex items-center z-50">
                   <FiSearch
-                    className="text-white text-xl cursor-pointer"
+                    className="text-white text-xl cursor-pointer transition-transform duration-200 active:scale-95"
                     onClick={toggleMobileSearch}
                   />
                 </div>
 
                 {/* Açılan mobil input – tam enli üst div */}
                 {showMobileSearch && (
-                  <div className="absolute top-[-30px] left-0 w-full bg-[#202024] h-[80px] px-4 py-3 flex items-center z-50">
+                  <div className="absolute top-[-30px] left-0 w-full bg-[#202024] h-[80px] px-4 py-3 flex items-center z-50 animate-slideDown">
                     <FiSearch className="mr-2 text-white text-xl" />
                     <input
                       type="text"
@@ -99,7 +100,7 @@ return (
                       autoFocus
                     />
                     <IoClose
-                      className="ml-2 text-white text-2xl cursor-pointer"
+                      className="ml-2 text-white text-2xl cursor-pointer transition-transform duration-200 active:scale-95"
                       onClick={toggleMobileSearch}
                     />
                   </div>
@@ -140,26 +141,27 @@ return (
                   News
                 </Link>
               </div>
+
 {/* Mobile Discover dropdown (only visible on small screens) */}
 <div className="flex md:hidden items-center w-full justify-between">
   <div className="relative w-full">
     <button
       onClick={() => setIsOpen(!isOpen)}
-      className="flex items-center gap-1 text-gray-400 hover:text-white transition text-sm font-medium"
+      className="flex items-center gap-1 text-gray-400 hover:text-white transition-all duration-200 text-sm font-medium active:scale-95"
     >
       Discover
       <FiChevronDown
-        className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
       />
     </button>
 
     {isOpen && (
-      <div className="absolute top-full left-[48%] -translate-x-[46%] mt-7 w-screen px-4 z-50">
+      <div className="absolute top-full left-[48%] -translate-x-[46%] mt-7 w-screen px-4 z-50 animate-slideDown">
         <div className="bg-[#101014] rounded-none shadow-lg p-[27px_32px] w-full flex flex-col items-center">
           <Link
             to="/"
             onClick={() => setIsOpen(false)}
-            className={`block w-full px-4 py-3 text-base border-b border-[#333] text-left transition ${
+            className={`block w-full px-4 py-3 text-base border-b border-[#333] text-left transition-all duration-200 active:bg-[#202024] ${
               location.pathname === "/" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -168,7 +170,7 @@ return (
           <Link
             to="/browse"
             onClick={() => setIsOpen(false)}
-            className={`block w-full px-4 py-3 text-base border-b border-[#333] text-left transition ${
+            className={`block w-full px-4 py-3 text-base border-b border-[#333] text-left transition-all duration-200 active:bg-[#202024] ${
               location.pathname === "/browse" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -177,7 +179,7 @@ return (
           <Link
             to="/news"
             onClick={() => setIsOpen(false)}
-            className={`block w-full px-4 py-3 text-base text-left transition ${
+            className={`block w-full px-4 py-3 text-base text-left transition-all duration-200 active:bg-[#202024] ${
               location.pathname === "/news" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -189,16 +191,13 @@ return (
   </div>
 </div>
 
-
-
-
         {/* Dropdown nəticələri */}
         {showDropdown && (
           <div
             ref={dropdownRef}
             className="absolute top-[50px] left-1/2 -translate-x-[41%] w-screen max-w-[500px]
            md:translate-x-0 md:left-5 md:w-[600px] backdrop-blur-md bg-[#1e1e1fcc] 
-           rounded-xl shadow-xl z-40 overflow-hidden"
+           rounded-xl shadow-xl z-40 overflow-hidden animate-slideDown"
 
 
           >
@@ -209,12 +208,15 @@ return (
             {filteredResults.length === 0 ? (
               <div className="text-gray-400 text-sm p-4">No results found</div>
             ) : (
-              filteredResults.map((item) => (
+              filteredResults.map((item, index) => (
                 <Link
                   to={`/details/${item.id}`}
                   key={item.id}
                   onClick={() => setShowDropdown(false)}
-                  className="flex items-start gap-3 px-4 p-3 hover:bg-[#4E4548] transition text-white"
+                  className="flex items-start gap-3 px-4 p-3 hover:bg-[#4E4548] transition-all duration-200 text-white active:bg-[#5E5558]"
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                  }}
                 >
                   <img
                     src={item.image}
@@ -242,7 +244,7 @@ return (
             )}
 
             <button
-              className="w-full text-left text-gray-300 font-semibold text-sm px-4 py-2 pb-4 cursor-pointer"
+              className="w-full text-left text-gray-300 font-semibold text-sm px-4 py-2 pb-4 cursor-pointer hover:bg-[#4E4548] transition-all duration-200 active:bg-[#5E5558]"
               onClick={() => {
                 navigate(`/browse?q=${encodeURIComponent(query)}`);
 
@@ -271,17 +273,34 @@ return (
 
       <div className="flex md:hidden items-center space-x-4 text-xl text-gray-400 pl-5">
             <Link
-              to="/wishlist" className="hover:text-white transition"
+              to="/wishlist" className="hover:text-white transition-all duration-200 active:scale-95"
             >
               <FaRegCheckCircle />
             </Link>
 
-        <Link to="/basket" className="hover:text-white transition">
+        <Link to="/basket" className="hover:text-white transition-all duration-200 active:scale-95">
           <IoCartOutline />
         </Link>
       </div>
     </div>
+    
+    {/* Custom CSS for mobile animations */}
+    <style jsx>{`
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .animate-slideDown {
+        animation: slideDown 0.3s ease-out forwards;
+      }
+    `}</style>
   </div>
 );
-
 }

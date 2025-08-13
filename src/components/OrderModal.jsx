@@ -10,42 +10,41 @@ export default function OrderModal({ subtotal, onClose, userId, game }) {
   const [isLoading, setIsLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState(null);
 
-useEffect(() => {
-  if (game) {
-    setCartItems([game]); // yalnız bu oyunu göstər
-    return;
-  }
+  useEffect(() => {
+    if (game) {
+      setCartItems([game]); // yalnız bu oyunu göstər
+      return;
+    }
 
-  // Əvvəlki səbət loqikası (Basket üçün)
-  if (!userId || games.length === 0 || dlcs.length === 0) return;
+    // Əvvəlki səbət loqikası (Basket üçün)
+    if (!userId || games.length === 0 || dlcs.length === 0) return;
 
-  const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
 
-  const items = savedCart
-    .map((item) => {
-      if (item && item.id) {
-        const foundGame = games.find((g) => String(g.id) === String(item.id));
-        if (foundGame) return foundGame;
+    const items = savedCart
+      .map((item) => {
+        if (item && item.id) {
+          const foundGame = games.find((g) => String(g.id) === String(item.id));
+          if (foundGame) return foundGame;
+          
+          const foundDlc = dlcs.find((d) => String(d.id) === String(item.id));
+          if (foundDlc) return foundDlc;
+        }
         
-        const foundDlc = dlcs.find((d) => String(d.id) === String(item.id));
-        if (foundDlc) return foundDlc;
-      }
-      
-      if (typeof item === "string") {
-        const foundGame = games.find((g) => String(g.id) === String(item));
-        if (foundGame) return foundGame;
+        if (typeof item === "string") {
+          const foundGame = games.find((g) => String(g.id) === String(item));
+          if (foundGame) return foundGame;
+          
+          const foundDlc = dlcs.find((d) => String(d.id) === String(item));
+          if (foundDlc) return foundDlc;
+        }
         
-        const foundDlc = dlcs.find((d) => String(d.id) === String(item));
-        if (foundDlc) return foundDlc;
-      }
-      
-      return null;
-    })
-    .filter(Boolean);
+        return null;
+      })
+      .filter(Boolean);
 
-  setCartItems(items);
-}, [game, userId, games, dlcs]);
-
+    setCartItems(items);
+  }, [game, userId, games, dlcs]);
 
   const handlePromoApply = () => {
     if (promoCode.trim().toLowerCase() === "orxan50") {
@@ -70,6 +69,20 @@ useEffect(() => {
       if (result.success) {
         setOrderStatus('success');
         console.log('Orders created:', result.orders);
+        
+        // Handle localStorage cleanup based on order type
+        if (game) {
+          // Single game purchase from details page - remove only this game from cart
+          const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+          const updatedCart = savedCart.filter(item => {
+            const itemId = typeof item === 'string' ? item : item.id;
+            return String(itemId) !== String(game.id);
+          });
+          localStorage.setItem(`cart_${userId}`, JSON.stringify(updatedCart));
+        } else {
+          // Full basket purchase - clear entire cart
+          localStorage.removeItem(`cart_${userId}`);
+        }
         
         // Close modal after 2 seconds
         setTimeout(() => {
@@ -162,74 +175,72 @@ useEffect(() => {
               </div>
             )}
 
-                      {/* Pricing Summary */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-gray-700">
-                <span>Price</span>
-                <span>${subtotal}</span>
-              </div>
-              {discountPercent > 0 && (
-                <div className="flex justify-between text-green-600 font-medium">
-                  <span>Sale Discount</span>
-                  <span>-${discountAmount}</span>
+            {/* Pricing Summary */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-gray-700">
+                  <span>Price</span>
+                  <span>${subtotal}</span>
                 </div>
-              )}
-            </div>
-            
-            <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-300">
-              <span>Total</span>
-              <span>${totalAfterDiscount}</span>
-            </div>
-
-            {/* Epic Rewards */}
-            <div className="mt-4 bg-yellow-100 border border-yellow-300 rounded px-3 py-2 flex items-center gap-2">
-              <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">★</span>
+                {discountPercent > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Sale Discount</span>
+                    <span>-${discountAmount}</span>
+                  </div>
+                )}
               </div>
-              <span className="text-sm text-gray-800">
-                <strong>Earn ${(parseFloat(totalAfterDiscount) * 0.05).toFixed(2)}</strong> in Epic Rewards with this purchase.
-              </span>
-            </div>
-          </div>
+              
+              <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-300">
+                <span>Total</span>
+                <span>${totalAfterDiscount}</span>
+              </div>
 
-          {/* Payment Details */}
-          <div className="px-6 py-4 border-t border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">Payment Details:</h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Credit Card / Debit Card</span>
-              <span className="font-bold">${totalAfterDiscount}</span>
+              {/* Epic Rewards */}
+              <div className="mt-4 bg-yellow-100 border border-yellow-300 rounded px-3 py-2 flex items-center gap-2">
+                <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">★</span>
+                </div>
+                <span className="text-sm text-gray-800">
+                  <strong>Earn ${(parseFloat(totalAfterDiscount) * 0.05).toFixed(2)}</strong> in Epic Rewards with this purchase.
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Promo Code */}
-          <div className="px-6 py-4 border-t border-gray-200">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none"
-                  placeholder="Enter creator code"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">i</span>
+            {/* Payment Details */}
+            <div className="px-6 py-4 border-t border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Payment Details:</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Credit Card / Debit Card</span>
+                <span className="font-bold">${totalAfterDiscount}</span>
+              </div>
+            </div>
+
+            {/* Promo Code */}
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter creator code"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">i</span>
+                    </div>
                   </div>
                 </div>
+                <button
+                  onClick={handlePromoApply}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-medium transition-colors"
+                >
+                  Apply
+                </button>
               </div>
-              <button
-                onClick={handlePromoApply}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-medium transition-colors"
-              >
-                Apply
-              </button>
             </div>
           </div>
-
-          </div>
-
 
           {/* Terms */}
           <div className="px-6 py-3 text-xs text-gray-600 border-t border-gray-200 font-semibold">

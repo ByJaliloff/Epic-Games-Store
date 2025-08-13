@@ -144,7 +144,7 @@ export default function Basket() {
       <SearchNav />
       <div className="bg-[#0f0f10] min-h-screen py-10 text-white">
         <div className="w-[90%] md:max-w-[85%] lg:max-w-[75%] mx-auto mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-[40px] font-bold text-[#ffffff] mb-10 text-center md:text-left">
+          <h1 className="text-[40px] font-bold text-[#ffffff] mb-10 text-center md:text-left">
             My Cart
           </h1>
 
