@@ -2,8 +2,29 @@ import { useContext } from "react";
 import SearchNav from "../components/SearchNav";
 import { GameContext } from "../context/DataContext";
 
+// Function to convert date strings to sortable values
+const getDateValue = (dateStr) => {
+  if (dateStr === "now") return 0;
+  
+  const match = dateStr.match(/^(\d+)([hd])\s*ago$/);
+  if (!match) return Infinity; // Unknown format goes to end
+  
+  const [, num, unit] = match;
+  const value = parseInt(num);
+  
+  if (unit === 'h') return value; // hours
+  if (unit === 'd') return value * 24; // convert days to hours
+  
+  return Infinity;
+};
+
 export default function NewsSection() {
   const { news } = useContext(GameContext);
+
+  // Sort news by recency (most recent first)
+  const sortedNews = [...news].sort((a, b) => {
+    return getDateValue(a.date) - getDateValue(b.date);
+  });
 
   return (
     <>
@@ -14,40 +35,40 @@ export default function NewsSection() {
 
           {/* İlk iki xəbəri yan-yana */}
           <div className="grid md:grid-cols-2 gap-6 mb-10">
-            {news.slice(0, 2).map((news) => (
+            {sortedNews.slice(0, 2).map((newsItem) => (
               <div
-                key={news.id}
+                key={newsItem.id}
                 className="flex flex-col justify-between min-h-[400px] rounded-lg hover:shadow-lg transition-shadow duration-200"
               >
                 <a
-                  href={news.link}
+                  href={newsItem.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block rounded-lg mb-4 overflow-hidden"
                 >
-                  <img src={news.image} alt={news.title} className="rounded-lg w-full transition duration-300 filter hover:brightness-120" />
+                  <img src={newsItem.image} alt={newsItem.title} className="rounded-lg w-full h-40 sm:h-48 md:h-56 lg:h-72.5 object-cover transition duration-300 filter hover:brightness-120" />
                 </a>
 
                 <div className="flex flex-col flex-1">
                   <p className="text-[#ffffffa6] text-[9px] tracking-[1px] font-extrabold mb-2 uppercase">
-                    {news.date}
+                    {newsItem.date}
                   </p>
 
                   <a
-                    href={news.link}
+                    href={newsItem.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-white font-bold text-[14px] my-4 leading-[20px] tracking-[0.2px]"
                   >
-                    {news.title}
+                    {newsItem.title}
                   </a>
 
                   <p className="text-[#ffffffa6] font-semibold my-4 leading-[20px] tracking-[0.2px]">
-                    {news.description}
+                    {newsItem.description}
                   </p>
 
                   <a
-                    href={news.link}
+                    href={newsItem.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-auto text-white border-b border-gray-500 hover:border-gray-300 transition-colors duration-200 w-max"
@@ -61,44 +82,44 @@ export default function NewsSection() {
 
           {/* Qalan xəbərlər alt-alta */}
           <div className="flex flex-col gap-6">
-            {news.slice(2).map((news) => (
+            {sortedNews.slice(2).map((newsItem) => (
               <div
-                key={news.id}
-                className="flex flex-col md:flex-row gap-4 mb-[30px] pt-[20px] border-t border-gray-500  hover:shadow-md transition-shadow duration-200"
+                key={newsItem.id}
+                className="flex flex-col md:flex-row gap-4 mb-[30px] pt-[20px] border-t border-gray-500 hover:shadow-md transition-shadow duration-200"
               >
                 <a
-                  href={news.link}
+                  href={newsItem.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block md:w-[200px] rounded-lg overflow-hidden"
                 >
                   <img
-                    src={news.image}
-                    alt={news.title}
+                    src={newsItem.image}
+                    alt={newsItem.title}
                     className="w-full h-auto md:h-24 object-cover rounded-lg transition duration-300 filter hover:brightness-120"
                   />
                 </a>
 
                 <div className="flex flex-col justify-between flex-1">
                   <p className="text-[#ffffffa6] text-[9px] tracking-[1px] font-extrabold mb-2 uppercase">
-                    {news.date}
+                    {newsItem.date}
                   </p>
 
                   <a
-                    href={news.link}
+                    href={newsItem.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-white font-bold my-2 text-[14px] leading-[20px] tracking-[0.2px]"
                   >
-                    {news.title}
+                    {newsItem.title}
                   </a>
 
                   <p className="text-[#ffffffa6] font-semibold mb-2 text-[14px] leading-[20px] tracking-[0.2px]">
-                    {news.description}
+                    {newsItem.description}
                   </p>
 
                   <a
-                    href={news.link}
+                    href={newsItem.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-auto text-white border-b border-gray-500 hover:border-gray-300 transition-colors duration-200 w-max"

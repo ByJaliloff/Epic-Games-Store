@@ -42,7 +42,7 @@ const DlcAdminPanel = () => {
     gameId: "",
     title: "",
     image: "",
-    description: "",
+    shortDescription: "",
     price: "",
     discount: "",
     type: "",
@@ -130,7 +130,7 @@ const DlcAdminPanel = () => {
       gameId: "",
       title: "",
       image: "",
-      description: "",
+      shortDescription: "",
       price: "",
       discount: "",
       isFree: false,
@@ -425,10 +425,10 @@ const DlcAdminPanel = () => {
                   Təsvir
                 </label>
                 <textarea
-                  id="description"
-                  name="description"
+                  id="shortDescription"
+                  name="shortDescription"
                   placeholder="Təsvir"
-                  value={formData.description}
+                  value={formData.shortDescription}
                   onChange={handleChange}
                   rows={4}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors resize-none"

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { GameContext } from "../context/DataContext";
@@ -13,7 +13,6 @@ const typeMapping = {
 };
 
 export default function GameCard({ game }) {
-  const navigate = useNavigate();
   const { user } = useContext(GameContext);
 
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -79,25 +78,6 @@ export default function GameCard({ game }) {
   };
 
 
-const handleAddToCartAndNavigate = () => {
-  if (!user?.id) {
-    toast.error("Please log in to add items to your cart");
-    return;
-  }
-
-  const cartKey = `cart_${user.id}`;
-  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
-  const exists = cart.find((i) => i.id === game.id);
-
-  if (!exists) {
-    cart.push(game);
-    localStorage.setItem(cartKey, JSON.stringify(cart));
-  }
-
-  navigate("/basket");
-};
-
-
   const isDiscounted = game.discount && game.discount > 0;
   const isFree = game.price === "Free" || game.price === 0 || game.isFree === true;
   const price = isFree ? 0 : parseFloat(game.price);
@@ -110,9 +90,6 @@ const handleAddToCartAndNavigate = () => {
   const CardContent = (
   <div
     className="bg-[#101014] rounded-2xl overflow-hidden transition duration-300 group cursor-pointer shadow hover:shadow-lg w-full max-w-[180px] sm:max-w-none"
-    onClick={() =>
-      game.type === "basedgame" ? null : handleAddToCartAndNavigate()
-    }
   >
     <div className="relative">
       <img
@@ -186,12 +163,10 @@ const handleAddToCartAndNavigate = () => {
 );
 
 
-  return game.type === "basedgame" ? (
-  <Link to={`/details/${game.id}`}>
-    {CardContent}
-  </Link>
-) : (
-  CardContent
-);
+  return (
+    <Link to={`/details/${game.id}`}>
+      {CardContent}
+    </Link>
+  );
 
 }

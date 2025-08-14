@@ -57,10 +57,10 @@ function Details() {
 
   // Cart and wishlist effect - Updated to use user-specific cart
   useEffect(() => {
-    if (!games?.length || !id) return;
+    if ((!games?.length && !dlcs?.length) || !id) return;
     
-    const game = games.find((g) => g.id === id);
-    if (!game) return;
+    const item = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
+  if (!item) return;
     
     // If user is not logged in, reset cart and wishlist status
     if (!user?.id) {
@@ -70,40 +70,67 @@ function Details() {
     }
     
     // Updated cart to be user-specific like wishlist
-    const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
-    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
-    setIsInCart(cart.some((item) => item.id === game.id));
-    setIsInWishlist(wishlist.some((item) => item.id === game.id));
-  }, [games, id, user?.id]);
+ const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
+  const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+  setIsInCart(cart.some((cartItem) => cartItem.id === item.id));
+  setIsInWishlist(wishlist.some((wishlistItem) => wishlistItem.id === item.id));
+}, [games, dlcs, id, user?.id]);
 
   // Carousel auto-scroll effect
+useEffect(() => {
+  if ((!games?.length && !dlcs?.length) || !id) return;
+  
+  const item = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
+  if (!item?.carouselImages?.length) return;
+
+  const interval = setInterval(() => {
+    setMobileIndex((prev) =>
+      prev >= item.carouselImages.length - 1 ? 0 : prev + 1
+    );
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, [games, dlcs, id]); // Add dlcs to dependency array;
+
+  // Reset active tab to overview when game changes and it's not a base game
   useEffect(() => {
-    if (!games?.length || !id) return;
+    if ((!games?.length && !dlcs?.length) || !id) return;
     
-    const game = games.find((g) => g.id === id);
-    if (!game?.carouselImages?.length) return;
-
-    const interval = setInterval(() => {
-      setMobileIndex((prev) =>
-        prev >= game.carouselImages.length - 1 ? 0 : prev + 1
-      );
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [games, id]);
+    const game = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
+    if (!game) return;
+    
+    const isBaseGame = game.type?.toLowerCase() === "basedgame";
+    if (!isBaseGame && activeTab === "Add-ons") {
+      setActiveTab("overview");
+    }
+  }, [id, games, dlcs, activeTab]);
   
   // NOW we can do conditional returns after ALL hooks are declared
   if (loading) return <Loader />;
   if (error) return <Error />;
   
-  const game = games.find((g) => g.id === id);
+  const game = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
   if (!game) return <Error />;
 
-  const relatedDlcs = dlcs.filter(
-    (dlc) =>
-      dlc.gameId === id &&
-      ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase())
-  );
+  // Check if current game is a base game to determine if Add-ons tab should be shown
+  const isBaseGame = game.type?.toLowerCase() === "basedgame";
+
+const relatedDlcs = dlcs.filter((dlc) => {
+  // If current item is a base game, show its DLCs
+  if (game.type === "basedgame") {
+    return dlc.gameId === id && 
+           ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
+  }
+  
+  // If current item is a DLC, show other DLCs for the same base game
+  if (game.gameId) {
+    return dlc.gameId === game.gameId && 
+           dlc.id !== id && // Exclude current item
+           ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
+  }
+  
+  return [];
+});
 
   // Touch handlers
   const handleTouchStart = (e) => {
@@ -147,7 +174,7 @@ function Details() {
   const typeMapping = {
     basedgame: "Base Game",
     dlc: "DLC",
-    addon: "Add-on",
+    addon: "Add-On",
     edition: "Edition",
     expansion: "Expansion",
   };
@@ -311,7 +338,7 @@ function Details() {
   };
 
   function RatingStars({ rating }) {
-    let starsImage = "/stars/1.png";
+    let starsImage = "/stars/3.png";
     if (rating >= 4.5) starsImage = "/stars/5.png";
     else if (rating >= 3.5) starsImage = "/stars/4.png";
     else if (rating >= 2.5) starsImage = "/stars/3.png";
@@ -375,8 +402,9 @@ function Details() {
           )}
         </div>
 
+        {/* Navigation tabs - Only show Add-ons tab for base games */}
         <nav className="flex gap-4 sm:gap-6 text-white text-sm sm:text-base mt-6 overflow-x-auto scrollbar-hide">
-          {["overview", "Add-ons"].map((tab) => (
+          {["overview", ...(isBaseGame ? ["Add-ons"] : [])].map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
@@ -534,7 +562,7 @@ function Details() {
                   <img src={game.logo} alt={`${game.title} Logo`} className="h-32 sm:h-40 object-contain max-w-full" />
                 </div>
 
-                <p className="inline-block max-w-max text-xs sm:text-sm text-white px-2 py-1 bg-gray-600 rounded mx-auto xl:mx-0">
+                <p className="inline-block font-semibold max-w-max text-xs sm:text-sm text-white px-2 py-1 bg-gray-600 rounded mx-auto xl:mx-0">
                   {typeMapping[game.type?.toLowerCase()] || "Unknown"}
                 </p>
 
@@ -544,7 +572,7 @@ function Details() {
                     <span className="text-white font-semibold text-lg sm:text-xl">Free</span>
                   ) : game.discount ? (
                     <div className="flex items-center justify-center xl:justify-start gap-3 sm:gap-4 flex-wrap">
-                      <span className="bg-blue-600 text-xs sm:text-sm px-2 py-1 rounded-full">-{game.discount}%</span>
+                      <span className="bg-[#26BBFF] font-semibold text-xs sm:text-sm px-2 py-1 rounded-xl text-black">-{game.discount}%</span>
                       <span className="line-through text-gray-400 text-sm sm:text-base">${originalPrice.toFixed(2)}</span>
                       <span className="text-white font-semibold text-base">${discountedPrice}</span>
                     </div>
@@ -674,7 +702,7 @@ function Details() {
             </div>
           )}
 
-          {activeTab === "Add-ons" && (
+          {activeTab === "Add-ons" && isBaseGame && (
             <div className="mt-8 sm:mt-10">
               {relatedDlcs.length === 0 ? (
                 <div className="text-center py-12 sm:py-16">

@@ -75,25 +75,7 @@ function Card({ games, dlcs, loading, error }) {
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
   };
 
-  const handleAddToCartAndNavigate = (item, e) => {
-    e.preventDefault();
 
-    if (!user?.id) {
-      toast.error("Please log in to add items to your cart");
-      return;
-    }
-
-    const cartKey = `cart_${user.id}`;
-    const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
-    const exists = cart.find((i) => i.id === item.id);
-
-    if (!exists) {
-      cart.push(item);
-      localStorage.setItem(cartKey, JSON.stringify(cart));
-    }
-
-    navigate("/basket");
-  };
 
   const [startIndexes, setStartIndexes] = useState({
     discover: 0,
@@ -254,27 +236,19 @@ function Card({ games, dlcs, loading, error }) {
             </div>
           );
 
-          return item.type === "basedgame" ? (
-            <Link
-              to={`/details/${item.id}`}
-              key={item.id}
-              className="text-left block"
-            >
-              {CardContent}
-            </Link>
-          ) : (
-            <button
-              key={item.id}
-              onClick={(e) => handleAddToCartAndNavigate(item, e)}
-              className="text-left block"
-            >
-              {CardContent}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
+            return (
+              <Link
+                to={`/details/${item.id}`}
+                key={item.id}
+                className="text-left block"
+              >
+                {CardContent}
+              </Link>
+            );
+                    })}
+                  </div>
+                );
+              };
 
   const Section = ({ title, type }) => {
     return (

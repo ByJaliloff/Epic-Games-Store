@@ -2,6 +2,35 @@ import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { getAllNews, addNews, updateNews, deleteNews } from "../service.js/NewsService";
 
+// Utility function to generate relative time for new articles
+const generateRelativeTime = () => {
+  return "now";
+};
+
+// Utility function to convert relative time to actual date for filtering
+const parseRelativeTime = (relativeString) => {
+  if (relativeString === "now") {
+    return new Date();
+  }
+  
+  const match = relativeString.match(/(\d+)([smhd]|mo|y)\s*ago/);
+  if (!match) return new Date();
+  
+  const value = parseInt(match[1]);
+  const unit = match[2];
+  const now = new Date();
+  
+  switch (unit) {
+    case 's': return new Date(now - value * 1000);
+    case 'm': return new Date(now - value * 60 * 1000);
+    case 'h': return new Date(now - value * 60 * 60 * 1000);
+    case 'd': return new Date(now - value * 24 * 60 * 60 * 1000);
+    case 'mo': return new Date(now - value * 30 * 24 * 60 * 60 * 1000);
+    case 'y': return new Date(now - value * 365 * 24 * 60 * 60 * 1000);
+    default: return new Date();
+  }
+};
+
 // SVG Icons
 const Edit = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -34,7 +63,6 @@ const NewsAdminPanel = () => {
     id: "",
     title: "",
     description: "",
-    date: "",
     image: "",
     link: ""
   });
@@ -46,7 +74,9 @@ const NewsAdminPanel = () => {
   };
 
   const openEditModal = (item) => {
-    setFormData(item);
+    // Remove date from form data since we don't want users to edit it
+    const { date, ...editableData } = item;
+    setFormData(editableData);
     setIsEditing(true);
     setShowModal(true);
   };
@@ -64,9 +94,20 @@ const NewsAdminPanel = () => {
     e.preventDefault();
     try {
       if (isEditing) {
-        await updateNews(formData.id, formData);
+        // When editing, keep the original date
+        const originalItem = newsList.find(item => item.id === formData.id);
+        const updatedData = { 
+          ...formData, 
+          date: originalItem.date // Keep original date
+        };
+        await updateNews(formData.id, updatedData);
       } else {
-        const newItem = { ...formData, id: uuidv4() };
+        // When creating, auto-generate relative time
+        const newItem = { 
+          ...formData, 
+          id: uuidv4(),
+          date: generateRelativeTime() // Auto-generate "now"
+        };
         await addNews(newItem);
       }
       await fetchNews();
@@ -96,7 +137,6 @@ const NewsAdminPanel = () => {
       id: "",
       title: "",
       description: "",
-      date: "",
       image: "",
       link: ""
     });
@@ -104,8 +144,26 @@ const NewsAdminPanel = () => {
     setShowModal(false);
   };
 
+  // Filter functions for stats
+  const getRecentArticles = () => {
+    return newsList.filter(item => {
+      const itemDate = parseRelativeTime(item.date);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return itemDate > weekAgo;
+    }).length;
+  };
+
+  const getThisMonthArticles = () => {
+    return newsList.filter(item => {
+      const itemDate = parseRelativeTime(item.date);
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+    }).length;
+  };
+
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -140,13 +198,7 @@ const NewsAdminPanel = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Recent Articles</p>
-              <p className="text-3xl font-bold text-white mt-2">
-                {newsList.filter(item => {
-                  const itemDate = new Date(item.date);
-                  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-                  return itemDate > weekAgo;
-                }).length}
-              </p>
+              <p className="text-3xl font-bold text-white mt-2">{getRecentArticles()}</p>
             </div>
           </div>
         </div>
@@ -155,13 +207,7 @@ const NewsAdminPanel = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-sm font-medium">This Month</p>
-              <p className="text-3xl font-bold text-white mt-2">
-                {newsList.filter(item => {
-                  const itemDate = new Date(item.date);
-                  const currentMonth = new Date().getMonth();
-                  return itemDate.getMonth() === currentMonth;
-                }).length}
-              </p>
+              <p className="text-3xl font-bold text-white mt-2">{getThisMonthArticles()}</p>
             </div>
           </div>
         </div>
@@ -247,13 +293,12 @@ const NewsAdminPanel = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 { name: "title", label: "Başlıq" },
                 { name: "image", label: "Şəkil URL" },
                 { name: "link", label: "Xəbər Linki" },
-                { name: "date", label: "Tarix" },
-              ].map(({ name, label, type = "text" }) => (
+              ].map(({ name, label }) => (
                 <div key={name} className="space-y-2">
                   <label htmlFor={name} className="block text-sm font-medium text-gray-300">
                     {label}
@@ -264,12 +309,27 @@ const NewsAdminPanel = () => {
                     placeholder={label}
                     value={formData[name] || ""}
                     onChange={handleChange}
-                    type={type}
+                    type="text"
                     className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
                     required
                   />
                 </div>
               ))}
+
+              {/* Date display for editing */}
+              {isEditing && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Tarix (Avtomatik)
+                  </label>
+                  <div className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-gray-400">
+                    {(() => {
+                      const originalItem = newsList.find(item => item.id === formData.id);
+                      return originalItem ? originalItem.date : '';
+                    })()}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               <div className="space-y-2 md:col-span-2">
@@ -301,13 +361,14 @@ const NewsAdminPanel = () => {
                   Bağla
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white font-medium rounded-lg transition-colors"
                 >
                   {isEditing ? "Yadda saxla" : "Əlavə et"}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

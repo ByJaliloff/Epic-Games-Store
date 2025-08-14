@@ -84,54 +84,64 @@ export default function Browse() {
     setCurrentPage(1);
   }, [filters, searchQuery]);
 
-  const filtered = useMemo(() => {
-    return combined.filter((item) => {
-      const title = item.title?.toLowerCase() || "";
-      const matchesQuery = searchQuery === "" || title.includes(searchQuery);
+// Replace the price filtering section in your filtered useMemo with this:
 
-      const matchesGenre =
-        filters.genre.length === 0 ||
-        (Array.isArray(item.genre) && filters.genre.some((g) => item.genre.includes(g)));
+const filtered = useMemo(() => {
+  return combined.filter((item) => {
+    const title = item.title?.toLowerCase() || "";
+    const matchesQuery = searchQuery === "" || title.includes(searchQuery);
 
-      const matchesFeatures =
-        filters.features.length === 0 ||
-        (Array.isArray(item.features) && filters.features.some((f) => item.features.includes(f)));
+    const matchesGenre =
+      filters.genre.length === 0 ||
+      (Array.isArray(item.genre) && filters.genre.some((g) => item.genre.includes(g)));
 
-      const matchesType =
-        filters.type.length === 0 ||
-        (typeof item.type === "string" && filters.type.includes(item.type));
+    const matchesFeatures =
+      filters.features.length === 0 ||
+      (Array.isArray(item.features) && filters.features.some((f) => item.features.includes(f)));
 
-      const matchesPlatforms =
-        filters.platforms.length === 0 ||
-        (Array.isArray(item.platforms) &&
-          filters.platforms.some((p) => item.platforms.includes(p)));
+    const matchesType =
+      filters.type.length === 0 ||
+      (typeof item.type === "string" && filters.type.includes(item.type));
 
-      let price = 0;
-      if (typeof item.price === "number") {
-        price = item.price;
-      } else if (typeof item.price === "string") {
-        const cleaned = item.price.replace(/[^0-9.]/g, "");
-        price = parseFloat(cleaned);
-        if (isNaN(price)) price = 0;
-      }
+    const matchesPlatforms =
+      filters.platforms.length === 0 ||
+      (Array.isArray(item.platforms) &&
+        filters.platforms.some((p) => item.platforms.includes(p)));
 
-      let matchesPrice = true;
-      if (filters.price === "Free") matchesPrice = price === 0;
-      else if (filters.price === "Under $5") matchesPrice = price < 5;
-      else if (filters.price === "Under $10") matchesPrice = price < 10;
-      else if (filters.price === "Under $20") matchesPrice = price < 20;
-      else if (filters.price === "Under $50") matchesPrice = price < 50;
+    // 🟢 FIXED: Calculate effective price considering discount
+    let originalPrice = 0;
+    if (typeof item.price === "number") {
+      originalPrice = item.price;
+    } else if (typeof item.price === "string") {
+      const cleaned = item.price.replace(/[^0-9.]/g, "");
+      originalPrice = parseFloat(cleaned);
+      if (isNaN(originalPrice)) originalPrice = 0;
+    }
 
-      return (
-        matchesQuery &&
-        matchesGenre &&
-        matchesFeatures &&
-        matchesType &&
-        matchesPlatforms &&
-        matchesPrice
-      );
-    });
-  }, [combined, searchQuery, filters]);
+    // Calculate the effective price after discount
+    let effectivePrice = originalPrice;
+    if (item.discount && item.discount > 0) {
+      effectivePrice = originalPrice * (1 - item.discount / 100);
+    }
+
+    // Use effective price for filtering
+    let matchesPrice = true;
+    if (filters.price === "Free") matchesPrice = effectivePrice === 0;
+    else if (filters.price === "Under $5") matchesPrice = effectivePrice > 0 && effectivePrice < 5;
+    else if (filters.price === "Under $10") matchesPrice = effectivePrice > 0 && effectivePrice < 10;
+    else if (filters.price === "Under $20") matchesPrice = effectivePrice > 0 && effectivePrice < 20;
+    else if (filters.price === "Under $50") matchesPrice = effectivePrice > 0 && effectivePrice < 50;
+
+    return (
+      matchesQuery &&
+      matchesGenre &&
+      matchesFeatures &&
+      matchesType &&
+      matchesPlatforms &&
+      matchesPrice
+    );
+  });
+}, [combined, searchQuery, filters]);
 
   const gamesPerPage = 20;
   const totalPages = Math.ceil(filtered.length / gamesPerPage);

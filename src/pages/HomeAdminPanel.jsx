@@ -1,5 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { GameContext } from '../context/DataContext';
+import { getUserLibrary } from '../service.js/OrderService';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -68,28 +69,172 @@ const MoreHorizontal = () => (
   </svg>
 );
 
+const Users = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M16 7c0-2.21-1.79-4-4-4S8 4.79 8 7s1.79 4 4 4 4-1.79 4-4zm-4 6c-4.42 0-8 1.79-8 4v3h16v-3c0-2.21-3.58-4-8-4z"/>
+  </svg>
+);
 
+const ShoppingBag = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v12z"/>
+  </svg>
+);
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 // Import your existing admin panels (you'll need to add these imports)
- import SliderAdminPanel from './SliderAdminPanel';
- import NewsAdminPanel from './NewsAdminPanel'; 
- import GamesAdminPanel from './GamesAdminPanel';
- import DlcAdminPanel from './DlcAdminPanel';
-
-// Placeholder components - replace these with your actual imports
+import SliderAdminPanel from './SliderAdminPanel';
+import NewsAdminPanel from './NewsAdminPanel'; 
+import GamesAdminPanel from './GamesAdminPanel';
+import DlcAdminPanel from './DlcAdminPanel';
 
 // Dashboard Component (original content)
 function Dashboard() {
-  const { games, slides, dlcs, news } = useContext(GameContext) || {};
+  const { games, slides, dlcs, news, user } = useContext(GameContext) || {};
+  const [usersWithPurchases, setUsersWithPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const contextGames = games || [];
   const contextSlides = slides || [];
   const contextDlcs = dlcs || [];
   const contextNews = news || [];
+  // Extract users array from the user object
+  let contextUsers = [];
+  
+  console.log('Raw user data from context:', user);
+  
+  if (user) {
+    // Try different possible structures
+    if (Array.isArray(user)) {
+      contextUsers = user;
+    } else if (user.users && Array.isArray(user.users)) {
+      contextUsers = user.users;
+    } else if (user.data && Array.isArray(user.data)) {
+      contextUsers = user.data;
+    } else if (typeof user === 'object') {
+      // If it's an object, check what properties it has
+      console.log('User object properties:', Object.keys(user));
+      // Try to find an array property
+      const arrayProperty = Object.keys(user).find(key => Array.isArray(user[key]));
+      if (arrayProperty) {
+        console.log('Found array property:', arrayProperty);
+        contextUsers = user[arrayProperty];
+      } else {
+        // If no array found, maybe it's a single user object, wrap it in array
+        contextUsers = [user];
+      }
+    }
+  }
+  
+  console.log('Processed contextUsers:', contextUsers);
+  console.log('contextUsers is array:', Array.isArray(contextUsers), 'length:', contextUsers.length);
 
-  const filteredGamesForDiscount = contextGames.filter((g) => g.discount > 0);
+  // Fetch user purchases
+ useEffect(() => {
+    const fetchUserPurchases = async () => {
+      // Check if contextUsers exists and is an array
+      if (!contextUsers || !Array.isArray(contextUsers) || contextUsers.length === 0) {
+        console.log('No users available or contextUsers is not an array:', contextUsers);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('Users from context:', contextUsers);
+        console.log('Users type:', typeof contextUsers, 'Is array:', Array.isArray(contextUsers));
+        console.log('Games from context:', contextGames);
+        console.log('DLCs from context:', contextDlcs);
+
+        const usersWithLibrary = await Promise.all(
+          contextUsers.map(async (user) => {
+            try {
+              // Use getUserLibrary from OrderService to get user's purchases
+              const userLibraryResponse = await getUserLibrary(user.id);
+              console.log(`Library response for user ${user.id}:`, userLibraryResponse);
+              
+              // Handle the specific structure returned by getUserLibrary
+              let gameIds = [];
+              if (userLibraryResponse && userLibraryResponse.success && userLibraryResponse.gameIds) {
+                gameIds = userLibraryResponse.gameIds;
+              }
+              
+              console.log(`Game IDs for user ${user.id}:`, gameIds);
+              
+              // Map IDs to actual game objects - games have matching IDs
+              const purchasedGames = gameIds
+                .map(id => contextGames.find(game => game.id === id))
+                .filter(Boolean);
+                
+              // Map IDs to actual DLC objects - DLCs also have matching IDs in the same gameIds array
+              const purchasedDlcs = gameIds
+                .map(id => contextDlcs.find(dlc => dlc.id === id))
+                .filter(Boolean);
+              
+              console.log(`Purchased games for user ${user.id}:`, purchasedGames);
+              console.log(`Purchased DLCs for user ${user.id}:`, purchasedDlcs);
+
+              // Calculate total spent from purchased games and DLCs
+              let totalSpent = 0;
+              purchasedGames.forEach(game => {
+                if (game && game.price) {
+                  totalSpent += parseFloat(game.price);
+                }
+              });
+              purchasedDlcs.forEach(dlc => {
+                if (dlc && dlc.price) {
+                  totalSpent += parseFloat(dlc.price);
+                }
+              });
+
+              // Since your OrderService doesn't provide purchase dates, 
+              // we'll set lastPurchase to null or current date if they have purchases
+              let lastPurchase = null;
+              if (purchasedGames.length > 0 || purchasedDlcs.length > 0) {
+                lastPurchase = new Date(); // or null if you don't want to show a date
+              }
+
+              return {
+                ...user,
+                purchasedGames,
+                purchasedDlcs,
+                totalItems: purchasedGames.length + purchasedDlcs.length,
+                totalSpent,
+                lastPurchase
+              };
+            } catch (error) {
+              console.error(`Error fetching library for user ${user.id}:`, error);
+              return {
+                ...user,
+                purchasedGames: [],
+                purchasedDlcs: [],
+                totalItems: 0,
+                totalSpent: 0,
+                lastPurchase: null
+              };
+            }
+          })
+        );
+
+        console.log('Users with purchases:', usersWithLibrary);
+        setUsersWithPurchases(usersWithLibrary);
+      } catch (error) {
+        console.error('Error fetching user purchases:', error);
+        setUsersWithPurchases([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserPurchases();
+  }, [contextUsers.length, contextGames.length, contextDlcs.length]);// Use lengths instead of full objects to prevent infinite renders
+
+ const filteredGamesForDiscount = contextGames.filter((g) => g.discount > 0);
   const filteredDlcsForDiscount = contextDlcs.filter((d) => d.discount > 0);
+
+  // Calculate total revenue from all users
+  const totalRevenue = usersWithPurchases.reduce((sum, user) => sum + user.totalSpent, 0);
+  const totalPurchases = usersWithPurchases.reduce((sum, user) => sum + user.totalItems, 0);
 
   const stats = [
     {
@@ -101,19 +246,19 @@ function Dashboard() {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      title: 'Active Sliders',
-      value: contextSlides.length,
-      change: '+1.0%',
+      title: 'Active Users',
+      value: contextUsers.length,
+      change: '+5.2%',
       changeType: 'positive',
-      icon: Image,
-      color: 'from-purple-500 to-purple-600'
+      icon: Users,
+      color: 'from-green-500 to-green-600'
     },
     {
-      title: 'News Articles',
-      value: contextNews.length,
-      change: '+4.0%',
+      title: 'Total Purchases',
+      value: totalPurchases,
+      change: '+8.1%',
       changeType: 'positive',
-      icon: Newspaper,
+      icon: ShoppingBag,
       color: 'from-orange-500 to-orange-600'
     },
     {
@@ -356,51 +501,137 @@ function Dashboard() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">Total Revenue</span>
-              <span className="font-semibold text-green-400">$142k</span>
+              <span className="font-semibold text-green-400">${totalRevenue.toLocaleString()}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Content Table */}
+      {/* Users and Purchases Table */}
       <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
-        <h3 className="text-lg font-semibold mb-4">Recent Content</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700/50">
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Content</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Last Updated</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contextGames.slice(0, 3).map((game, index) => (
-                <tr key={game.id} className="border-b border-gray-700/30 hover:bg-gray-700/30">
-                  <td className="py-3 px-4">{game.title}</td>
-                  <td className="py-3 px-4">
-                    <span className="bg-blue-600/20 text-blue-400 px-2 py-1 rounded-full text-xs">
-                      Game
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="bg-green-600/20 text-green-400 px-2 py-1 rounded-full text-xs">
-                      Active
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-gray-400 text-sm">2 hours ago</td>
-                  <td className="py-3 px-4">
-                    <button className="text-gray-400 hover:text-white">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Users className="w-5 h-5 mr-2 text-blue-400" />
+          Users & Their Purchases
+        </h3>
+        
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+            <span className="ml-3 text-gray-300">Loading user purchases...</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700/50">
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">User</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Email</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Games Owned</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">DLCs Owned</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Total Spent</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Last Purchase</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {usersWithPurchases.length > 0 ? usersWithPurchases.map((user) => (
+                  <tr key={user.id} className="border-b border-gray-700/30 hover:bg-gray-700/30">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
+                          {user.username ? user.username.charAt(0).toUpperCase() : 
+                           user.name ? user.name.charAt(0).toUpperCase() :
+                           user.email ? user.email.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <span className="font-medium">{user.firstName || user.name || 'Unknown'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-gray-300">{user.email || 'No email'}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col">
+                        <span className="bg-blue-600/20 text-blue-400 px-2 py-1 rounded-full text-xs mb-1 text-center">
+                          {user.purchasedGames.length}
+                        </span>
+                        {user.purchasedGames.length > 0 && (
+                          <div className="text-xs text-gray-400 max-w-32 truncate" title={user.purchasedGames.map(g => g.title).join(', ')}>
+                            {user.purchasedGames.map(g => g.title).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col">
+                        <span className="bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full text-xs mb-1 text-center">
+                          {user.purchasedDlcs.length}
+                        </span>
+                        {user.purchasedDlcs.length > 0 && (
+                          <div className="text-xs text-gray-400 max-w-32 truncate" title={user.purchasedDlcs.map(d => d.title).join(', ')}>
+                            {user.purchasedDlcs.map(d => d.title).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-green-400 font-semibold">
+                        ${user.totalSpent.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-gray-400 text-sm">
+                      {user.lastPurchase ? user.lastPurchase.toLocaleDateString() : 'No purchases'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <button 
+                        className="text-gray-400 hover:text-white"
+                        title={`Total purchases: ${user.totalItems}`}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="7" className="py-8 px-4 text-center text-gray-400">
+                      {!contextUsers ? 'Users not loaded from context' : 
+                       !Array.isArray(contextUsers) ? 'Users data is not in array format' :
+                       contextUsers.length === 0 ? 'No users found in context' : 
+                       'No purchase data available'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Purchase Summary */}
+        {usersWithPurchases.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-700/50">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">{usersWithPurchases.length}</div>
+                <div className="text-sm text-gray-400">Total Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">
+                  {usersWithPurchases.reduce((sum, user) => sum + user.purchasedGames.length, 0)}
+                </div>
+                <div className="text-sm text-gray-400">Games Sold</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">
+                  {usersWithPurchases.reduce((sum, user) => sum + user.purchasedDlcs.length, 0)}
+                </div>
+                <div className="text-sm text-gray-400">DLCs Sold</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400">
+                  ${totalRevenue.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-400">Total Revenue</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
