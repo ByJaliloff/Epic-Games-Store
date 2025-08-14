@@ -734,7 +734,8 @@ function Details() {
       
       {showModal && (
         <OrderModal 
-          game={game}  
+          game={game}
+          userId={user.id}  
           subtotal={
             isFree
               ? 0
