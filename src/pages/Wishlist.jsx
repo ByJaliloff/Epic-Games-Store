@@ -4,6 +4,7 @@ import SearchNav from "../components/SearchNav";
 import { GameContext } from "../context/DataContext";
 import Loader from "../components/Loader";
 import { toast } from "react-toastify";
+import { isGameInLibrary } from "../service.js/OrderService"; // Import the library check function
 
 const platformIcons = {
   Windows: "/icons/windows.png",
@@ -35,16 +36,52 @@ function Wishlist() {
   if (error) return <Error />
 
   const [wishlist, setWishlist] = useState([]);
+  const [ownedGames, setOwnedGames] = useState(new Set()); // Track owned games
+  const [checkingLibrary, setCheckingLibrary] = useState(false); // Loading state for library check
+  const [cartItems, setCartItems] = useState([]); // Track cart items in state
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
       setWishlist([]);
+      setOwnedGames(new Set());
+      setCartItems([]);
       return;
     }
     const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
     setWishlist(saved);
+    
+    // Load cart items from localStorage
+    const cartKey = `cart_${user.id}`;
+    const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+    setCartItems(cart);
+    
+    // Check which games are already owned when component mounts
+    checkOwnedGames(saved);
   }, [user]);
+
+  // Function to check which games in wishlist are already owned
+  const checkOwnedGames = async (wishlistItems) => {
+    if (!user?.id || wishlistItems.length === 0) return;
+    
+    setCheckingLibrary(true);
+    const owned = new Set();
+    
+    try {
+      // Check each game in the wishlist
+      for (const item of wishlistItems) {
+        const isOwned = await isGameInLibrary(user.id, item.id);
+        if (isOwned) {
+          owned.add(item.id);
+        }
+      }
+      setOwnedGames(owned);
+    } catch (error) {
+      console.error('Failed to check owned games:', error);
+    } finally {
+      setCheckingLibrary(false);
+    }
+  };
 
   const removeFromWishlist = (id) => {
     if (!user) return;
@@ -53,6 +90,11 @@ function Wishlist() {
     const updated = wishlist.filter((item) => item.id !== id);
     setWishlist(updated);
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
+
+    // Remove from owned games set as well
+    const newOwnedGames = new Set(ownedGames);
+    newOwnedGames.delete(id);
+    setOwnedGames(newOwnedGames);
 
     toast.info(
       <div className="flex items-center gap-3">
@@ -69,9 +111,31 @@ function Wishlist() {
     );
   };
 
-  const addToCart = (item) => {
+  const addToCart = async (item) => {
     if (!user?.id) {
       toast.error("Please log in to add items to your cart");
+      return;
+    }
+
+    // Check if game is in library before adding to cart
+    const isOwned = await isGameInLibrary(user.id, item.id);
+    if (isOwned) {
+      toast.error(
+        <div className="flex items-center gap-3">
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-10 h-10 object-cover rounded"
+          />
+          <div>
+            <p className="font-semibold text-white">{item.title}</p>
+            <p className="text-sm text-red-300">Already in your library</p>
+          </div>
+        </div>
+      );
+      
+      // Update the owned games set
+      setOwnedGames(prev => new Set([...prev, item.id]));
       return;
     }
 
@@ -80,8 +144,11 @@ function Wishlist() {
     const exists = cart.find((i) => i.id === item.id);
 
     if (!exists) {
-      cart.push(item);
-      localStorage.setItem(cartKey, JSON.stringify(cart));
+      const updatedCart = [...cart, item];
+      localStorage.setItem(cartKey, JSON.stringify(updatedCart));
+      
+      // Update state to trigger re-render
+      setCartItems(updatedCart);
 
       toast.success(
         <div className="flex items-center gap-3">
@@ -101,9 +168,11 @@ function Wishlist() {
 
   const isInCart = (id) => {
     if (!user?.id) return false;
-    const cartKey = `cart_${user.id}`;
-    const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
-    return cart.some((item) => item.id === id);
+    return cartItems.some((item) => item.id === id);
+  };
+
+  const isGameOwned = (gameId) => {
+    return ownedGames.has(gameId);
   };
 
   if (!user?.id) {
@@ -169,6 +238,12 @@ function Wishlist() {
           <h1 className="text-[40px] font-bold text-[#ffffff] mb-10 text-center md:text-left">
             My Wishlist
           </h1>
+
+          {checkingLibrary && (
+            <div className="text-center text-gray-400 mb-4">
+              Checking your library...
+            </div>
+          )}
 
           {wishlist.length === 0 ? (
             <div className="text-center mt-20 flex flex-col items-center justify-center">
@@ -302,19 +377,50 @@ function Wishlist() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between relative z-10">
                         <button
                           onClick={() => removeFromWishlist(item.id)}
-                          className="text-red-400 md:text-[#ffffffa6] font-semibold hover:text-red-400 transition text-sm text-left"
+                          className="text-red-400 md:text-[#ffffffa6] font-semibold hover:text-red-400 transition text-sm text-left cursor-pointer"
                         >
                           Remove from Wishlist
                         </button>
 
-                        <div className="flex gap-2">
-                          {isInCart(item.id) ? (
+                        <div className="flex gap-2 relative z-20">
+                          {isGameOwned(item.id) ? (
+                                  <button
+                                    disabled
+                                    className="flex-1 sm:flex-none bg-[#236e92]  text-black font-semibold 
+                                              px-6 py-2 rounded-md text-sm transition opacity-50 cursor-not-allowed"
+                                  >
+                                    <span className="flex items-center justify-center gap-2">
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-5 h-5"
+                                        viewBox="0 0 22 22"
+                                      >
+                                        <g fill="none" fillRule="evenodd">
+                                          <circle
+                                            cx="11"
+                                            cy="11"
+                                            r="9"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                          />
+                                          <path
+                                            fillRule="evenodd"
+                                            clipRule="evenodd"
+                                            d="M8 8.5C8 8.22386 8.22386 8 8.5 8H9.9C10.1761 8 10.4 8.22386 10.4 8.5V9.9C10.4 10.1761 10.1761 10.4 9.9 10.4H8.5C8.22386 10.4 8 10.1761 8 9.9V8.5ZM8.5 11.6C8.22386 11.6 8 11.8239 8 12.1V13.5C8 13.7761 8.22386 14 8.5 14H9.9C10.1761 14 10.4 13.7761 10.4 13.5V12.1C10.4 11.8239 10.1761 11.6 9.9 11.6H8.5ZM12.1 11.6C11.8239 11.6 11.6 11.8239 11.6 12.1V13.5C11.6 13.7761 11.8239 14 12.1 14H13.5C13.7761 14 14 13.7761 14 13.5V12.1C14 11.8239 13.7761 11.6 13.5 11.6H12.1ZM12.1 8C11.8239 8 11.6 8.22386 11.6 8.5V9.9C11.6 10.1761 11.8239 10.4 12.1 10.4H13.5C13.7761 10.4 14 10.1761 14 9.9V8.5C14 8.22386 13.7761 8 13.5 8H12.1Z"
+                                            fill="currentColor"
+                                          />
+                                        </g>
+                                      </svg>
+                                      In Library
+                                    </span>
+                                  </button>
+                          ) : isInCart(item.id) ? (
                             <button
                               onClick={() => navigate("/basket")}
-                              className="flex-1 sm:flex-none bg-transparent border border-[#26bbff] hover:bg-[#26bbff] hover:text-black text-[#26bbff] font-semibold px-6 py-2 rounded-md text-sm transition"
+                              className="flex-1 sm:flex-none bg-transparent border border-[#26bbff] hover:bg-[#26bbff] hover:text-black text-[#26bbff] font-semibold px-6 py-2 rounded-md text-sm transition cursor-pointer"
                             >
                               View in Cart
                             </button>
@@ -322,9 +428,8 @@ function Wishlist() {
                             <button
                               onClick={() => {
                                 addToCart(item);
-                                setWishlist([...wishlist]);
                               }}
-                              className="flex-1 sm:flex-none bg-[#26bbff] hover:bg-[#00aaff] font-semibold text-black px-6 py-2 rounded-md text-sm transition"
+                              className="flex-1 sm:flex-none bg-[#26bbff] hover:bg-[#00aaff] font-semibold text-black px-6 py-2 rounded-md text-sm transition cursor-pointer"
                             >
                               Add to Cart
                             </button>

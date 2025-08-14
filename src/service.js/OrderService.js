@@ -29,7 +29,67 @@ function calculateFinalPrice(item, promoDiscountPercent = 0) {
   return parseFloat(finalPrice.toFixed(2));
 }
 
-// Create order data for each item
+// Get user's library (purchased games)
+export const getUserLibrary = async (userId) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/purchases`);
+    const allPurchases = res.data;
+    
+    const userGameIds = new Set();
+    
+    // Process different purchase data formats
+    allPurchases.forEach(purchase => {
+      // Format 1: Individual purchase with userId
+      if (purchase.userId === userId && purchase.gameId) {
+        userGameIds.add(purchase.gameId);
+      }
+      // Format 2: Order object with nested orders array
+      else if (purchase.orders && Array.isArray(purchase.orders)) {
+        purchase.orders.forEach(order => {
+          if (order.userId === userId && order.gameId) {
+            userGameIds.add(order.gameId);
+          }
+        });
+      }
+    });
+    
+    return { success: true, gameIds: Array.from(userGameIds) };
+  } catch (err) {
+    console.error("Failed to fetch user library:", err.message);
+    return { success: false, error: err.message, gameIds: [] };
+  }
+};
+
+// Check if a specific game is in user's library
+export const isGameInLibrary = async (userId, gameId) => {
+  try {
+    const library = await getUserLibrary(userId);
+    return library.success ? library.gameIds.includes(gameId) : false;
+  } catch (error) {
+    console.error('Failed to check if game is in library:', error);
+    return false;
+  }
+};
+
+// Check multiple games at once
+export const areGamesInLibrary = async (userId, gameIds) => {
+  try {
+    const library = await getUserLibrary(userId);
+    if (!library.success) return {};
+    
+    const result = {};
+    gameIds.forEach(gameId => {
+      result[gameId] = library.gameIds.includes(gameId);
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Failed to check games in library:', error);
+    return {};
+  }
+};
+
+// Create order data for each item (only for games not in library)
 export function createOrderData(cartItems, userId, promoDiscountPercent = 0) {
   const orders = cartItems.map(item => ({
     id: generateUUID(),
@@ -64,11 +124,32 @@ export function clearCart(userId) {
   }
 }
 
-// Complete order process
+// Complete order process (with library check)
 export async function processOrder(cartItems, userId, promoDiscountPercent = 0) {
   try {
-    // Create order data
-    const orders = createOrderData(cartItems, userId, promoDiscountPercent);
+    // First, check which games are already in library
+    const gameIds = cartItems.map(item => item.id);
+    const libraryCheck = await areGamesInLibrary(userId, gameIds);
+    
+    // Filter out games that are already in library
+    const itemsToPurchase = cartItems.filter(item => !libraryCheck[item.id]);
+    
+    if (itemsToPurchase.length === 0) {
+      return { 
+        success: false, 
+        error: "All games are already in your library",
+        alreadyOwned: cartItems.map(item => item.id)
+      };
+    }
+    
+    // Show warning if some games are already owned
+    const alreadyOwnedItems = cartItems.filter(item => libraryCheck[item.id]);
+    if (alreadyOwnedItems.length > 0) {
+      console.warn('Some games already owned:', alreadyOwnedItems.map(item => item.title));
+    }
+    
+    // Create order data for remaining items
+    const orders = createOrderData(itemsToPurchase, userId, promoDiscountPercent);
     
     // Submit to API
     const result = await submitOrders(orders);
@@ -76,7 +157,13 @@ export async function processOrder(cartItems, userId, promoDiscountPercent = 0) 
     if (result.success) {
       // Clear cart on success
       clearCart(userId);
-      return { success: true, orders, data: result.data };
+      return { 
+        success: true, 
+        orders, 
+        data: result.data,
+        purchasedItems: itemsToPurchase,
+        alreadyOwnedItems
+      };
     } else {
       return { success: false, error: result.error };
     }

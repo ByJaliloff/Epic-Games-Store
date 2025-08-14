@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import Error from "./Error";
 import Loader from "../components/Loader";
 import OrderModal from "../components/OrderModal";
+import { isGameInLibrary } from "../service.js/OrderService"; // Import the new function
 
 function Details() {
   const { id } = useParams();
@@ -19,6 +20,8 @@ function Details() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isInCart, setIsInCart] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isInLibrary, setIsInLibrary] = useState(false); // New state for library check
+  const [libraryCheckLoading, setLibraryCheckLoading] = useState(false); // Loading state for library check
   const [activeTab, setActiveTab] = useState("overview");
   const [mobileIndex, setMobileIndex] = useState(0);
   const [isTabChanging, setIsTabChanging] = useState(false);
@@ -29,7 +32,29 @@ function Details() {
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
 
-  // ALL useEffect hooks must also be declared before any conditional returns
+  // Library check effect - New useEffect for checking if game is in library
+  useEffect(() => {
+    const checkLibrary = async () => {
+      if (!user?.id || !id) {
+        setIsInLibrary(false);
+        return;
+      }
+      
+      setLibraryCheckLoading(true);
+      try {
+        const inLibrary = await isGameInLibrary(user.id, id);
+        setIsInLibrary(inLibrary);
+      } catch (error) {
+        console.error('Failed to check library:', error);
+        setIsInLibrary(false);
+      } finally {
+        setLibraryCheckLoading(false);
+      }
+    };
+
+    checkLibrary();
+  }, [user?.id, id]);
+
   // Cart and wishlist effect - Updated to use user-specific cart
   useEffect(() => {
     if (!games?.length || !id) return;
@@ -201,10 +226,15 @@ function Details() {
     }, 150);
   };
 
-  // Updated addToCart function to use user-specific cart
+  // Updated addToCart function to use user-specific cart and check library
   const addToCart = () => {
     if (!user?.id) {
       toast.error("Please log in to add items to cart");
+      return;
+    }
+
+    if (isInLibrary) {
+      toast.info("This game is already in your library!");
       return;
     }
 
@@ -241,6 +271,11 @@ function Details() {
       return;
     }
 
+    if (isInLibrary) {
+      toast.info("This game is already in your library!");
+      return;
+    }
+
     const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
 
     if (!wishlist.find((item) => item.id === game.id)) {
@@ -258,6 +293,21 @@ function Details() {
         </div>
       );
     }
+  };
+
+  // New function to handle "Buy Now" click with library check
+  const handleBuyNow = () => {
+    if (!user?.id) {
+      toast.error("Please log in to purchase games");
+      return;
+    }
+
+    if (isInLibrary) {
+      toast.info("This game is already in your library!");
+      return;
+    }
+
+    setShowModal(true);
   };
 
   function RatingStars({ rating }) {
@@ -504,48 +554,89 @@ function Details() {
                 </div>
 
                 {/* Buttons */}
-                <div className="space-y-3">
-                  <button className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg" onClick={() => setShowModal(true)}>
-                    {isFree ? "Get" : game.releaseDate?.toLowerCase() === "upcoming" ? "Pre-purchase" : "Buy Now"}
-                  </button>
+               <div className="space-y-3">
+                    {/* Əgər kitabxanadadırsa, yalnız 1 dənə düymə */}
+                    {isInLibrary ? (
+                            <button
+                              disabled
+                              className="w-full flex items-center justify-center gap-2 bg-[#88888a] text-black py-3 sm:py-4 rounded-md font-semibold cursor-not-allowed opacity-80"
+                            >
+                              {/* Sol ikon */}
+                              <svg
+                                aria-hidden="true"
+                                className="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M5.5 3.25A2.25 2.25 0 0 0 3.25 5.5v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3A2.25 2.25 0 0 0 8.5 3.25zM4.75 5.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm.75 7.75a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm8.5 0a2.25 2.25 0 0 1 2.25-2.25h3a2.25 2.25 0 0 1 2.25 2.25v3a2.25 2.25 0 0 1-2.25 2.25h-3a2.25 2.25 0 0 1-2.25-2.25zm2.25-.75a.75.75 0 0 0-.75.75v3c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-3a.75.75 0 0 0-.75-.75zm0-11.5a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75z"
+                                />
+                              </svg>
 
-                  {isInCart ? (
-                    <button
-                      type="button"
-                      onClick={() => navigate("/basket")}
-                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      View in Cart
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={addToCart}
-                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      Add To Cart
-                    </button>
-                  )}
+                              In Library
+                            </button>
 
-                  {isInWishlist ? (
-                    <button
-                      type="button"
-                      onClick={() => navigate("/wishlist")}
-                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      View in Wishlist
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={addToWishlist}
-                      className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      Add to Wishlist
-                    </button>
-                  )}
-                </div>
+                    ) : (
+                      <>
+                        {/* Buy Now Button */}
+                        <button
+                          className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg" 
+                          onClick={handleBuyNow}
+                          disabled={libraryCheckLoading}
+                        >
+                          {libraryCheckLoading
+                            ? "Checking..."
+                            : isFree
+                              ? "Get"
+                              : game.releaseDate?.toLowerCase() === "upcoming"
+                                ? "Pre-purchase"
+                                : "Buy Now"}
+                        </button>
 
+                        {/* Add to Cart Button */}
+                        {isInCart ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/basket")}
+                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                          >
+                            View in Cart
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={addToCart}
+                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                            disabled={libraryCheckLoading}
+                          >
+                            {libraryCheckLoading ? "Checking..." : "Add To Cart"}
+                          </button>
+                        )}
+
+                        {/* Add to Wishlist Button */}
+                        {isInWishlist ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/wishlist")}
+                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                          >
+                            View in Wishlist
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={addToWishlist}
+                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                            disabled={libraryCheckLoading}
+                          >
+                            {libraryCheckLoading ? "Checking..." : "Add to Wishlist"}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 {/* Technical Information */}
                 <div className="mt-6 text-xs sm:text-sm text-white pt-4 space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
@@ -640,16 +731,21 @@ function Details() {
           animation: fade-in-up 0.6s ease-out;
         }
       `}</style>
-              {showModal && (
-                      <OrderModal game={game}  subtotal={
-                  isFree
-                    ? 0
-                    : game.discount
-                      ? parseFloat(discountedPrice)
-                      : parseFloat(originalPrice)
-                }  onClose={() => setShowModal(false)} />
-                                  )}
-                   </div>
+      
+      {showModal && (
+        <OrderModal 
+          game={game}  
+          subtotal={
+            isFree
+              ? 0
+              : game.discount
+                ? parseFloat(discountedPrice)
+                : parseFloat(originalPrice)
+          }  
+          onClose={() => setShowModal(false)} 
+        />
+      )}
+    </div>
   );
 }
 
