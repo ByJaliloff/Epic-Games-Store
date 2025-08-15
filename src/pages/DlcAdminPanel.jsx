@@ -279,7 +279,7 @@ const DlcAdminPanel = () => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <img src={item.image} alt="dlc" className="w-16 h-10 rounded-lg object-cover shadow-md" />
+                    <img src={item.image} alt="dlc" className="w-12 h-16 rounded-lg object-cover shadow-md" />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">

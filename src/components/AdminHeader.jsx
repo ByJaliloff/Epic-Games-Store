@@ -1,39 +1,66 @@
 import React from 'react';
-import { IoSearch, IoNotifications } from 'react-icons/io5';
-import { FaUser } from 'react-icons/fa';
+import { FaUserAstronaut } from 'react-icons/fa';
 
 function AdminPanelHeader() {
   return (
     <header className="fixed top-0 left-64 right-0 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 h-[85px] px-8 py-4 z-[60]">
       <div className="flex items-center justify-between">
+        {/* Left side - Title */}
         <div>
-          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-gray-400 text-sm">Manage your Epic Games Store content</p>
+          <h1 className="text-2xl font-bold text-white animate-pulse">
+            🚀 Admin Dashboard
+          </h1>
+          <p className="text-gray-400 text-sm animate-typing overflow-hidden whitespace-nowrap border-r-2 border-gray-400 pr-1">
+            Welcome back, Commander Orxan!
+          </p>
         </div>
+
+        {/* Right side - Profile */}
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search Dashboard"
-              className="bg-gray-800/50 border border-gray-700/50 rounded-lg pl-10 pr-4 py-2 w-64 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
-            />
-          </div>
-          <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
-            <IoNotifications className="w-5 h-5" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-          </button>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <FaUser className="w-4 h-4 text-white" />
+          <div className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full flex items-center justify-center animate-gradient-xy bg-[length:200%_200%] transition-transform duration-300 group-hover:scale-110">
+              <FaUserAstronaut className="w-5 h-5 text-white" />
             </div>
             <div className="text-sm">
-              <p className="font-medium text-white">Orxan</p>
-              <p className="text-gray-400">Administrator</p>
+              <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-400 animate-gradient-xy bg-[length:200%_200%]">
+                Orxan
+              </p>
+              <p className="text-gray-400 group-hover:text-purple-400 transition-colors duration-300">
+                Galactic Administrator
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Extra Animations */}
+      <style jsx>{`
+        @keyframes typing {
+          from {
+            width: 0;
+          }
+          to {
+            width: 100%;
+          }
+        }
+        .animate-typing {
+          animation: typing 2s steps(30, end) forwards;
+        }
+        @keyframes gradient-xy {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        .animate-gradient-xy {
+          animation: gradient-xy 3s ease infinite;
+        }
+      `}</style>
     </header>
   );
 }
