@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useMemo } from 'react';
 import { GameContext } from '../context/DataContext';
 import { getUserLibrary } from '../service.js/OrderService';
 import {
@@ -83,15 +83,15 @@ const ShoppingBag = () => (
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-// Import your existing admin panels (you'll need to add these imports)
+// Import your existing admin panels
 import SliderAdminPanel from './SliderAdminPanel';
 import NewsAdminPanel from './NewsAdminPanel'; 
 import GamesAdminPanel from './GamesAdminPanel';
 import DlcAdminPanel from './DlcAdminPanel';
 
-// Dashboard Component (original content)
+// Dashboard Component (Fixed)
 function Dashboard() {
-  const { games, slides, dlcs, news, user } = useContext(GameContext) || {};
+  const { games, slides, dlcs, news, user, allUsers } = useContext(GameContext) || {};
   const [usersWithPurchases, setUsersWithPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -99,119 +99,215 @@ function Dashboard() {
   const contextSlides = slides || [];
   const contextDlcs = dlcs || [];
   const contextNews = news || [];
-  // Extract users array from the user object
-  let contextUsers = [];
-  
-  console.log('Raw user data from context:', user);
-  
-  if (user) {
-    // Try different possible structures
-    if (Array.isArray(user)) {
-      contextUsers = user;
-    } else if (user.users && Array.isArray(user.users)) {
-      contextUsers = user.users;
-    } else if (user.data && Array.isArray(user.data)) {
-      contextUsers = user.data;
-    } else if (typeof user === 'object') {
-      // If it's an object, check what properties it has
-      console.log('User object properties:', Object.keys(user));
-      // Try to find an array property
-      const arrayProperty = Object.keys(user).find(key => Array.isArray(user[key]));
-      if (arrayProperty) {
-        console.log('Found array property:', arrayProperty);
-        contextUsers = user[arrayProperty];
-      } else {
-        // If no array found, maybe it's a single user object, wrap it in array
-        contextUsers = [user];
+
+  // FIXED: Properly extract users with useMemo to prevent re-computation
+  const contextUsers = useMemo(() => {
+    console.log('Raw allUsers from context:', allUsers);
+    console.log('Raw user from context:', user);
+    
+    // Priority 1: Try allUsers first (most likely source)
+    if (allUsers) {
+      if (Array.isArray(allUsers)) {
+        console.log('✅ allUsers is direct array:', allUsers.length, 'users');
+        return allUsers;
+      } else if (allUsers.users && Array.isArray(allUsers.users)) {
+        console.log('✅ allUsers.users is array:', allUsers.users.length, 'users');
+        return allUsers.users;
+      } else if (allUsers.data && Array.isArray(allUsers.data)) {
+        console.log('✅ allUsers.data is array:', allUsers.data.length, 'users');
+        return allUsers.data;
+      } else if (typeof allUsers === 'object') {
+        // Check for any array property in allUsers
+        const arrayKeys = Object.keys(allUsers).filter(key => Array.isArray(allUsers[key]));
+        if (arrayKeys.length > 0) {
+          console.log('✅ Found array in allUsers at key:', arrayKeys[0]);
+          return allUsers[arrayKeys[0]];
+        }
       }
     }
-  }
-  
-  console.log('Processed contextUsers:', contextUsers);
-  console.log('contextUsers is array:', Array.isArray(contextUsers), 'length:', contextUsers.length);
 
-  // Fetch user purchases
- useEffect(() => {
+    // Priority 2: Fallback to user property
+    if (user) {
+      if (Array.isArray(user)) {
+        console.log('✅ user is direct array:', user.length, 'users');
+        return user;
+      } else if (user.users && Array.isArray(user.users)) {
+        console.log('✅ user.users is array:', user.users.length, 'users');
+        return user.users;
+      } else if (user.data && Array.isArray(user.data)) {
+        console.log('✅ user.data is array:', user.data.length, 'users');
+        return user.data;
+      } else if (typeof user === 'object' && user.id) {
+        // Single user object - wrap in array
+        console.log('✅ Single user object converted to array');
+        return [user];
+      } else if (typeof user === 'object') {
+        // Check for any array property in user
+        const arrayKeys = Object.keys(user).filter(key => Array.isArray(user[key]));
+        if (arrayKeys.length > 0) {
+          console.log('✅ Found array in user at key:', arrayKeys[0]);
+          return user[arrayKeys[0]];
+        }
+      }
+    }
+
+    console.log('❌ No valid users found, returning empty array');
+    return [];
+  }, [allUsers, user]);
+  
+  console.log('🔍 Final contextUsers:', contextUsers);
+  console.log('📊 contextUsers length:', contextUsers.length);
+
+  // FIXED: Better useEffect with proper dependencies and error handling
+  useEffect(() => {
     const fetchUserPurchases = async () => {
-      // Check if contextUsers exists and is an array
-      if (!contextUsers || !Array.isArray(contextUsers) || contextUsers.length === 0) {
-        console.log('No users available or contextUsers is not an array:', contextUsers);
+      if (!Array.isArray(contextUsers) || contextUsers.length === 0) {
+        console.log('⚠️ No users available or contextUsers is not an array:', contextUsers);
+        setUsersWithPurchases([]);
         setLoading(false);
         return;
       }
 
-      try {
-        console.log('Users from context:', contextUsers);
-        console.log('Users type:', typeof contextUsers, 'Is array:', Array.isArray(contextUsers));
-        console.log('Games from context:', contextGames);
-        console.log('DLCs from context:', contextDlcs);
+      console.log('🚀 Starting to fetch purchases for', contextUsers.length, 'users');
 
+      try {
         const usersWithLibrary = await Promise.all(
-          contextUsers.map(async (user) => {
+          contextUsers.map(async (user, index) => {
+            if (!user || typeof user !== 'object') {
+              console.log(`❌ Invalid user object at index ${index}:`, user);
+              return {
+                id: `invalid_${index}`,
+                firstName: 'Invalid',
+                lastName: 'User',
+                email: 'invalid@user.com',
+                role: 'user',
+                isActive: false,
+                createdAt: new Date(),
+                purchasedGames: [],
+                purchasedDlcs: [],
+                totalItems: 0,
+                totalSpent: 0,
+                lastPurchase: null
+              };
+            }
+
+            // Ensure user has required properties
+            const safeUser = {
+              id: user.id || `user_${index}`,
+              firstName: user.firstName || user.first_name || 'Unknown',
+              lastName: user.lastName || user.last_name || '',
+              email: user.email || 'no-email@provided.com',
+              role: user.role || 'user',
+              isActive: user.isActive !== undefined ? user.isActive : true,
+              createdAt: user.createdAt || user.created_at || new Date(),
+              lastLogin: user.lastLogin || user.last_login || null,
+              ...user
+            };
+
+            if (!safeUser.id) {
+              console.log(`❌ User missing ID at index ${index}:`, user);
+              return {
+                ...safeUser,
+                purchasedGames: [],
+                purchasedDlcs: [],
+                totalItems: 0,
+                totalSpent: 0,
+                lastPurchase: null
+              };
+            }
+
             try {
+              console.log(`🔄 Fetching library for user ${safeUser.id} (${safeUser.firstName})`);
+              
               // Use getUserLibrary from OrderService to get user's purchases
-              const userLibraryResponse = await getUserLibrary(user.id);
-              console.log(`Library response for user ${user.id}:`, userLibraryResponse);
+              const userLibraryResponse = await getUserLibrary(safeUser.id);
+              console.log(`📚 Library response for user ${safeUser.id}:`, userLibraryResponse);
               
               // Handle the specific structure returned by getUserLibrary
               let gameIds = [];
-              if (userLibraryResponse && userLibraryResponse.success && userLibraryResponse.gameIds) {
-                gameIds = userLibraryResponse.gameIds;
+              if (userLibraryResponse) {
+                if (userLibraryResponse.success && userLibraryResponse.gameIds) {
+                  gameIds = userLibraryResponse.gameIds;
+                } else if (Array.isArray(userLibraryResponse.gameIds)) {
+                  gameIds = userLibraryResponse.gameIds;
+                } else if (Array.isArray(userLibraryResponse)) {
+                  gameIds = userLibraryResponse;
+                }
               }
               
-              console.log(`Game IDs for user ${user.id}:`, gameIds);
+              console.log(`🎮 Game IDs for user ${safeUser.id}:`, gameIds);
               
-              // Map IDs to actual game objects - games have matching IDs
+              // Map IDs to actual game objects
               const purchasedGames = gameIds
-                .map(id => contextGames.find(game => game.id === id))
+                .map(id => contextGames.find(game => game && game.id === id))
                 .filter(Boolean);
                 
-              // Map IDs to actual DLC objects - DLCs also have matching IDs in the same gameIds array
+              // Map IDs to actual DLC objects
               const purchasedDlcs = gameIds
-                .map(id => contextDlcs.find(dlc => dlc.id === id))
+                .map(id => contextDlcs.find(dlc => dlc && dlc.id === id))
                 .filter(Boolean);
               
-              console.log(`Purchased games for user ${user.id}:`, purchasedGames);
-              console.log(`Purchased DLCs for user ${user.id}:`, purchasedDlcs);
+              console.log(`✅ User ${safeUser.id} - Games: ${purchasedGames.length}, DLCs: ${purchasedDlcs.length}`);
 
               // Calculate total spent from purchased games and DLCs
-                    let totalSpent = 0;
-                    purchasedGames.forEach(game => {
-                      if (game && game.price) {
-                        const originalPrice = parseFloat(game.price);
-                        const discount = game.discount || 0;
-                        const discountedPrice = originalPrice * (1 - discount / 100);
-                        totalSpent += discountedPrice;
-                      }
-                    });
-                    purchasedDlcs.forEach(dlc => {
-                      if (dlc && dlc.price) {
-                        const originalPrice = parseFloat(dlc.price);
-                        const discount = dlc.discount || 0;
-                        const discountedPrice = originalPrice * (1 - discount / 100);
-                        totalSpent += discountedPrice;
-                      }
-                    });
+              let totalSpent = 0;
+              
+              purchasedGames.forEach(game => {
+                if (game && typeof game.price === 'number' && !isNaN(game.price)) {
+                  const originalPrice = parseFloat(game.price);
+                  const discount = parseFloat(game.discount) || 0;
+                  const discountedPrice = originalPrice * (1 - discount / 100);
+                  totalSpent += discountedPrice;
+                } else if (game && game.price) {
+                  // Try to parse price as string
+                  const price = parseFloat(game.price);
+                  if (!isNaN(price)) {
+                    const discount = parseFloat(game.discount) || 0;
+                    const discountedPrice = price * (1 - discount / 100);
+                    totalSpent += discountedPrice;
+                  }
+                }
+              });
+              
+              purchasedDlcs.forEach(dlc => {
+                if (dlc && typeof dlc.price === 'number' && !isNaN(dlc.price)) {
+                  const originalPrice = parseFloat(dlc.price);
+                  const discount = parseFloat(dlc.discount) || 0;
+                  const discountedPrice = originalPrice * (1 - discount / 100);
+                  totalSpent += discountedPrice;
+                } else if (dlc && dlc.price) {
+                  // Try to parse price as string
+                  const price = parseFloat(dlc.price);
+                  if (!isNaN(price)) {
+                    const discount = parseFloat(dlc.discount) || 0;
+                    const discountedPrice = price * (1 - discount / 100);
+                    totalSpent += discountedPrice;
+                  }
+                }
+              });
 
-              // Since your OrderService doesn't provide purchase dates, 
-              // we'll set lastPurchase to null or current date if they have purchases
+              // Set lastPurchase to current date if they have purchases
               let lastPurchase = null;
               if (purchasedGames.length > 0 || purchasedDlcs.length > 0) {
-                lastPurchase = new Date(); // or null if you don't want to show a date
+                lastPurchase = new Date();
               }
 
-              return {
-                ...user,
+              const result = {
+                ...safeUser,
                 purchasedGames,
                 purchasedDlcs,
                 totalItems: purchasedGames.length + purchasedDlcs.length,
-                totalSpent,
+                totalSpent: Math.round(totalSpent * 100) / 100, // Round to 2 decimal places
                 lastPurchase
               };
+
+              console.log(`💰 User ${safeUser.id} final stats - Items: ${result.totalItems}, Spent: $${result.totalSpent}`);
+              return result;
+
             } catch (error) {
-              console.error(`Error fetching library for user ${user.id}:`, error);
+              console.error(`❌ Error fetching library for user ${safeUser.id}:`, error);
               return {
-                ...user,
+                ...safeUser,
                 purchasedGames: [],
                 purchasedDlcs: [],
                 totalItems: 0,
@@ -222,10 +318,10 @@ function Dashboard() {
           })
         );
 
-        console.log('Users with purchases:', usersWithLibrary);
+        console.log('🎉 Successfully processed all users:', usersWithLibrary.length);
         setUsersWithPurchases(usersWithLibrary);
       } catch (error) {
-        console.error('Error fetching user purchases:', error);
+        console.error('💥 Error fetching user purchases:', error);
         setUsersWithPurchases([]);
       } finally {
         setLoading(false);
@@ -233,14 +329,15 @@ function Dashboard() {
     };
 
     fetchUserPurchases();
-  }, [contextUsers.length, contextGames.length, contextDlcs.length]);// Use lengths instead of full objects to prevent infinite renders
+  }, [contextUsers, contextGames, contextDlcs]); // Dependencies on the actual arrays
 
- const filteredGamesForDiscount = contextGames.filter((g) => g.discount > 0);
-  const filteredDlcsForDiscount = contextDlcs.filter((d) => d.discount > 0);
+  // Filter games and DLCs with discounts
+  const filteredGamesForDiscount = contextGames.filter((g) => g && g.discount > 0);
+  const filteredDlcsForDiscount = contextDlcs.filter((d) => d && d.discount > 0);
 
-  // Calculate total revenue from all users
-  const totalRevenue = usersWithPurchases.reduce((sum, user) => sum + user.totalSpent, 0);
-  const totalPurchases = usersWithPurchases.reduce((sum, user) => sum + user.totalItems, 0);
+  // Calculate totals with safety checks
+  const totalRevenue = usersWithPurchases.reduce((sum, user) => sum + (user.totalSpent || 0), 0);
+  const totalPurchases = usersWithPurchases.reduce((sum, user) => sum + (user.totalItems || 0), 0);
 
   const stats = [
     {
@@ -278,11 +375,11 @@ function Dashboard() {
   ];
 
   const gameDiscountData = {
-    labels: filteredGamesForDiscount.map((g) => g.title),
+    labels: filteredGamesForDiscount.map((g) => g.title || 'Unknown'),
     datasets: [
       {
         label: 'Discount (%)',
-        data: filteredGamesForDiscount.map((g) => g.discount),
+        data: filteredGamesForDiscount.map((g) => g.discount || 0),
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
@@ -292,7 +389,7 @@ function Dashboard() {
   };
 
   const gameRatingData = {
-    labels: contextGames.map((g) => g.title),
+    labels: contextGames.map((g) => g.title || 'Unknown'),
     datasets: [
       {
         label: 'Rating (out of 5)',
@@ -306,20 +403,24 @@ function Dashboard() {
   };
 
   const dlcDiscountData = {
-    labels: filteredDlcsForDiscount.map((d) => d.title),
+    labels: filteredDlcsForDiscount.map((d) => d.title || 'Unknown'),
     datasets: [
       {
         label: 'DLC Discount (%)',
-        data: filteredDlcsForDiscount.map((d) => d.discount),
+        data: filteredDlcsForDiscount.map((d) => d.discount || 0),
         backgroundColor: [
           'rgba(168, 85, 247, 0.8)',
           'rgba(236, 72, 153, 0.8)',
           'rgba(251, 146, 60, 0.8)',
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(239, 68, 68, 0.8)',
         ],
         borderColor: [
           'rgba(168, 85, 247, 1)',
           'rgba(236, 72, 153, 1)',
           'rgba(251, 146, 60, 1)',
+          'rgba(34, 197, 94, 1)',
+          'rgba(239, 68, 68, 1)',
         ],
         borderWidth: 2,
       },
@@ -493,7 +594,7 @@ function Dashboard() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">Free Games</span>
-              <span className="font-semibold">{contextGames.filter(g => g.price === 0).length}</span>
+              <span className="font-semibold">{contextGames.filter(g => g && g.price === 0).length}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">Games on Sale</span>
@@ -502,7 +603,10 @@ function Dashboard() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">Avg. Rating</span>
               <span className="font-semibold">
-                {contextGames.length > 0 ? (contextGames.reduce((sum, game) => sum + (game.rating || 0), 0) / contextGames.length).toFixed(1) : '0.0'}
+                {contextGames.length > 0 ? 
+                  (contextGames.reduce((sum, game) => sum + (game?.rating || 0), 0) / contextGames.length).toFixed(1) 
+                  : '0.0'
+                }
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -581,21 +685,21 @@ function Dashboard() {
                   {/* Stats Row */}
                   <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-400">{user.purchasedGames.length}</div>
+                      <div className="text-2xl font-bold text-blue-400">{user.purchasedGames?.length || 0}</div>
                       <div className="text-xs text-gray-400 uppercase tracking-wide">Games</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-400">{user.purchasedDlcs.length}</div>
+                      <div className="text-2xl font-bold text-purple-400">{user.purchasedDlcs?.length || 0}</div>
                       <div className="text-xs text-gray-400 uppercase tracking-wide">DLCs</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-green-400">${user.totalSpent.toFixed(0)}</div>
+                      <div className="text-lg font-bold text-green-400">${(user.totalSpent || 0).toFixed(0)}</div>
                       <div className="text-xs text-gray-400 uppercase tracking-wide">Spent</div>
                     </div>
                   </div>
 
                   {/* Games Section */}
-                  {user.purchasedGames.length > 0 && (
+                  {user.purchasedGames && user.purchasedGames.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-300 flex items-center">
@@ -608,12 +712,12 @@ function Dashboard() {
                       </div>
                       <div className="space-y-1">
                         {user.purchasedGames.slice(0, 3).map((game, index) => (
-                          <div key={index} className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400 truncate flex-1 mr-2">{game.title}</span>
+                          <div key={game.id || index} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 truncate flex-1 mr-2">{game.title || 'Unknown Game'}</span>
                             <span className="text-green-400 font-medium">
                               ${game.discount > 0 
-                                ? (game.price * (1 - game.discount / 100)).toFixed(0)
-                                : game.price
+                                ? ((game.price || 0) * (1 - (game.discount || 0) / 100)).toFixed(0)
+                                : (game.price || 0).toFixed(0)
                               }
                             </span>
                           </div>
@@ -628,7 +732,7 @@ function Dashboard() {
                   )}
 
                   {/* DLCs Section */}
-                  {user.purchasedDlcs.length > 0 && (
+                  {user.purchasedDlcs && user.purchasedDlcs.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-300 flex items-center">
@@ -641,12 +745,12 @@ function Dashboard() {
                       </div>
                       <div className="space-y-1">
                         {user.purchasedDlcs.slice(0, 2).map((dlc, index) => (
-                          <div key={index} className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400 truncate flex-1 mr-2">{dlc.title}</span>
+                          <div key={dlc.id || index} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 truncate flex-1 mr-2">{dlc.title || 'Unknown DLC'}</span>
                             <span className="text-green-400 font-medium">
                               ${dlc.discount > 0 
-                                ? (dlc.price * (1 - dlc.discount / 100)).toFixed(0)
-                                : dlc.price
+                                ? ((dlc.price || 0) * (1 - (dlc.discount || 0) / 100)).toFixed(0)
+                                : (dlc.price || 0).toFixed(0)
                               }
                             </span>
                           </div>
@@ -661,7 +765,7 @@ function Dashboard() {
                   )}
 
                   {/* No Purchases State */}
-                  {user.totalItems === 0 && (
+                  {(!user.totalItems || user.totalItems === 0) && (
                     <div className="text-center py-6">
                       <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-2">
                         <ShoppingBag className="w-6 h-6 text-gray-500" />
@@ -674,10 +778,13 @@ function Dashboard() {
                   <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-700/30">
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500">
-                        {user.lastLogin ? `Last login: ${new Date(user.lastLogin).toLocaleDateString()}` : 'Never logged in'}
+                        {user.lastLogin ? 
+                          `Last login: ${new Date(user.lastLogin).toLocaleDateString()}` : 
+                          'Never logged in'
+                        }
                       </span>
                       <span className="text-xs text-gray-500">
-                        Joined: {new Date(user.createdAt).toLocaleDateString()}
+                        Joined: {new Date(user.createdAt || new Date()).toLocaleDateString()}
                       </span>
                     </div>
                     <button className="text-gray-400 hover:text-white transition-colors">
@@ -707,11 +814,11 @@ function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold text-white">
-                      {usersWithPurchases.reduce((sum, user) => sum + user.purchasedGames.length, 0)}
+                      {usersWithPurchases.reduce((sum, user) => sum + (user.purchasedGames?.length || 0), 0)}
                     </div>
                     <div className="text-green-200 text-sm mt-1">Games Sold</div>
                     <div className="text-xs text-green-300 mt-1">
-                      {usersWithPurchases.filter(u => u.purchasedGames.length > 0).length} buyers
+                      {usersWithPurchases.filter(u => (u.purchasedGames?.length || 0) > 0).length} buyers
                     </div>
                   </div>
                   <PlayCircle className="w-8 h-8 text-green-400" />
@@ -722,11 +829,11 @@ function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold text-white">
-                      {usersWithPurchases.reduce((sum, user) => sum + user.purchasedDlcs.length, 0)}
+                      {usersWithPurchases.reduce((sum, user) => sum + (user.purchasedDlcs?.length || 0), 0)}
                     </div>
                     <div className="text-purple-200 text-sm mt-1">DLCs Sold</div>
                     <div className="text-xs text-purple-300 mt-1">
-                      {usersWithPurchases.filter(u => u.purchasedDlcs.length > 0).length} buyers
+                      {usersWithPurchases.filter(u => (u.purchasedDlcs?.length || 0) > 0).length} buyers
                     </div>
                   </div>
                   <Package className="w-8 h-8 text-purple-400" />
@@ -741,7 +848,10 @@ function Dashboard() {
                     </div>
                     <div className="text-amber-200 text-sm mt-1">Total Revenue</div>
                     <div className="text-xs text-amber-300 mt-1">
-                      Avg: ${usersWithPurchases.length > 0 ? (totalRevenue / usersWithPurchases.filter(u => u.totalSpent > 0).length || 0).toFixed(0) : '0'} per buyer
+                      Avg: ${usersWithPurchases.length > 0 ? 
+                        (totalRevenue / (usersWithPurchases.filter(u => (u.totalSpent || 0) > 0).length || 1)).toFixed(0) : 
+                        '0'
+                      } per buyer
                     </div>
                   </div>
                   <TrendingUp className="w-8 h-8 text-amber-400" />
@@ -756,8 +866,15 @@ function Dashboard() {
             </div>
             <h3 className="text-lg font-medium text-gray-400 mb-2">No Users Found</h3>
             <p className="text-gray-500 text-sm">
-              Raw data type: {typeof user} | Is array: {Array.isArray(user) ? 'Yes' : 'No'} | Length: {contextUsers.length}
+              Debug Info - allUsers type: {typeof allUsers} | user type: {typeof user} | contextUsers length: {contextUsers.length}
             </p>
+            <div className="mt-4 p-4 bg-gray-800/50 rounded-lg text-left">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">Debug Data Structure:</h4>
+              <div className="text-xs text-gray-400 space-y-1">
+                <div>allUsers: {allUsers ? JSON.stringify(Object.keys(allUsers), null, 2) : 'null'}</div>
+                <div>user: {user ? JSON.stringify(Object.keys(user), null, 2) : 'null'}</div>
+              </div>
+            </div>
           </div>
         )}
       </div>

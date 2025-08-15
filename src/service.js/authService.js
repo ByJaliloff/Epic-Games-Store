@@ -49,4 +49,50 @@ async function userLogin({ email, password }) {
   }
 }
 
-export { userSignUp, userLogin };
+// ADD THIS: Bütün istifadəçiləri gətir (Admin paneli üçün)
+async function getAllUsers() {
+  try {
+    console.log('Fetching all users...');
+    const { data } = await authInstance.get('/users');
+    console.log('Fetched users:', data);
+    
+    // Make sure we return an array
+    if (Array.isArray(data)) {
+      return data;
+    } else {
+      console.warn('Expected array but got:', typeof data, data);
+      return [];
+    }
+  } catch (err) {
+    console.error('Error fetching all users:', err);
+    throw new Error(err.message || "İstifadəçilər yüklənərkən xəta baş verdi");
+  }
+}
+
+// ADD THIS: Specific user by ID (optional - for future use)
+async function getUserById(userId) {
+  try {
+    const { data } = await authInstance.get(`/users/${userId}`);
+    return data;
+  } catch (err) {
+    throw new Error(err.message || "İstifadəçi tapılmadı");
+  }
+}
+
+// ADD THIS: Update user (optional - for future admin features)
+async function updateUser(userId, updates) {
+  try {
+    const { data } = await authInstance.patch(`/users/${userId}`, updates);
+    return data;
+  } catch (err) {
+    throw new Error(err.message || "İstifadəçi yenilənərkən xəta baş verdi");
+  }
+}
+
+export { 
+  userSignUp, 
+  userLogin,
+  getAllUsers,    // ADD THIS
+  getUserById,    // ADD THIS (optional)
+  updateUser      // ADD THIS (optional)
+};
