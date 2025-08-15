@@ -175,17 +175,23 @@ function Dashboard() {
               console.log(`Purchased DLCs for user ${user.id}:`, purchasedDlcs);
 
               // Calculate total spent from purchased games and DLCs
-              let totalSpent = 0;
-              purchasedGames.forEach(game => {
-                if (game && game.price) {
-                  totalSpent += parseFloat(game.price);
-                }
-              });
-              purchasedDlcs.forEach(dlc => {
-                if (dlc && dlc.price) {
-                  totalSpent += parseFloat(dlc.price);
-                }
-              });
+                    let totalSpent = 0;
+                    purchasedGames.forEach(game => {
+                      if (game && game.price) {
+                        const originalPrice = parseFloat(game.price);
+                        const discount = game.discount || 0;
+                        const discountedPrice = originalPrice * (1 - discount / 100);
+                        totalSpent += discountedPrice;
+                      }
+                    });
+                    purchasedDlcs.forEach(dlc => {
+                      if (dlc && dlc.price) {
+                        const originalPrice = parseFloat(dlc.price);
+                        const discount = dlc.discount || 0;
+                        const discountedPrice = originalPrice * (1 - discount / 100);
+                        totalSpent += discountedPrice;
+                      }
+                    });
 
               // Since your OrderService doesn't provide purchase dates, 
               // we'll set lastPurchase to null or current date if they have purchases
@@ -508,128 +514,250 @@ function Dashboard() {
       </div>
 
       {/* Users and Purchases Table */}
-      <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-blue-400" />
-          Users & Their Purchases
-        </h3>
-        
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-            <span className="ml-3 text-gray-300">Loading user purchases...</span>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-2xl font-bold flex items-center">
+            <Users className="w-6 h-6 mr-3 text-blue-400" />
+            Users & Their Game Libraries
+          </h3>
+          <div className="flex items-center space-x-4 text-sm text-gray-400">
+            <span>Total Users: {usersWithPurchases.length}</span>
+            <span>•</span>
+            <span>Active Buyers: {usersWithPurchases.filter(u => u.totalItems > 0).length}</span>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-700/50">
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">User</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Games Owned</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">DLCs Owned</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Total Spent</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Last Purchase</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usersWithPurchases.length > 0 ? usersWithPurchases.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-700/30 hover:bg-gray-700/30">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
-                          {user.username ? user.username.charAt(0).toUpperCase() : 
-                           user.name ? user.name.charAt(0).toUpperCase() :
-                           user.email ? user.email.charAt(0).toUpperCase() : '?'}
-                        </div>
-                        <span className="font-medium">{user.firstName || user.name || 'Unknown'}</span>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+            <span className="ml-4 text-gray-300 text-lg">Loading user libraries...</span>
+          </div>
+        ) : usersWithPurchases.length > 0 ? (
+          <>
+            {/* Users Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {usersWithPurchases.map((user) => (
+                <div
+                  key={user.id}
+                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 hover:border-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10"
+                >
+                  {/* User Header */}
+                  <div className="flex items-center mb-6">
+                    <div className="relative">
+                      <div className={`w-14 h-14 ${user.role === 'super_admin' ? 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'} rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                        {user.firstName ? user.firstName.charAt(0).toUpperCase() : 
+                         user.email ? user.email.charAt(0).toUpperCase() : '?'}
                       </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-300">{user.email || 'No email'}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-col">
-                        <span className="bg-blue-600/20 text-blue-400 px-2 py-1 rounded-full text-xs mb-1 text-center">
+                      {user.role === 'super_admin' && (
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">A</span>
+                        </div>
+                      )}
+                      {user.totalItems > 0 && user.role !== 'super_admin' && (
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h4 className="font-semibold text-white text-lg">
+                        {user.firstName} {user.lastName}
+                      </h4>
+                      <p className="text-gray-400 text-sm truncate">{user.email}</p>
+                      <div className="flex items-center mt-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          user.role === 'super_admin' 
+                            ? 'bg-red-500/20 text-red-300' 
+                            : 'bg-blue-500/20 text-blue-300'
+                        }`}>
+                          {user.role === 'super_admin' ? 'Admin' : 'User'}
+                        </span>
+                        <span className={`ml-2 w-2 h-2 rounded-full ${user.isActive ? 'bg-green-400' : 'bg-gray-500'}`}></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">{user.purchasedGames.length}</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wide">Games</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{user.purchasedDlcs.length}</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wide">DLCs</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-400">${user.totalSpent.toFixed(0)}</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wide">Spent</div>
+                    </div>
+                  </div>
+
+                  {/* Games Section */}
+                  {user.purchasedGames.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-300 flex items-center">
+                          <PlayCircle className="w-4 h-4 mr-1 text-blue-400" />
+                          Owned Games
+                        </span>
+                        <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full">
                           {user.purchasedGames.length}
                         </span>
-                        {user.purchasedGames.length > 0 && (
-                          <div className="text-xs text-gray-400 max-w-32 truncate" title={user.purchasedGames.map(g => g.title).join(', ')}>
-                            {user.purchasedGames.map(g => g.title).join(', ')}
+                      </div>
+                      <div className="space-y-1">
+                        {user.purchasedGames.slice(0, 3).map((game, index) => (
+                          <div key={index} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 truncate flex-1 mr-2">{game.title}</span>
+                            <span className="text-green-400 font-medium">
+                              ${game.discount > 0 
+                                ? (game.price * (1 - game.discount / 100)).toFixed(0)
+                                : game.price
+                              }
+                            </span>
+                          </div>
+                        ))}
+                        {user.purchasedGames.length > 3 && (
+                          <div className="text-xs text-gray-500 text-center pt-1">
+                            +{user.purchasedGames.length - 3} more games
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-col">
-                        <span className="bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full text-xs mb-1 text-center">
+                    </div>
+                  )}
+
+                  {/* DLCs Section */}
+                  {user.purchasedDlcs.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-300 flex items-center">
+                          <Package className="w-4 h-4 mr-1 text-purple-400" />
+                          DLC Content
+                        </span>
+                        <span className="text-xs text-purple-400 bg-purple-400/10 px-2 py-1 rounded-full">
                           {user.purchasedDlcs.length}
                         </span>
-                        {user.purchasedDlcs.length > 0 && (
-                          <div className="text-xs text-gray-400 max-w-32 truncate" title={user.purchasedDlcs.map(d => d.title).join(', ')}>
-                            {user.purchasedDlcs.map(d => d.title).join(', ')}
+                      </div>
+                      <div className="space-y-1">
+                        {user.purchasedDlcs.slice(0, 2).map((dlc, index) => (
+                          <div key={index} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 truncate flex-1 mr-2">{dlc.title}</span>
+                            <span className="text-green-400 font-medium">
+                              ${dlc.discount > 0 
+                                ? (dlc.price * (1 - dlc.discount / 100)).toFixed(0)
+                                : dlc.price
+                              }
+                            </span>
+                          </div>
+                        ))}
+                        {user.purchasedDlcs.length > 2 && (
+                          <div className="text-xs text-gray-500 text-center pt-1">
+                            +{user.purchasedDlcs.length - 2} more DLCs
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-green-400 font-semibold">
-                        ${user.totalSpent.toFixed(2)}
+                    </div>
+                  )}
+
+                  {/* No Purchases State */}
+                  {user.totalItems === 0 && (
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <ShoppingBag className="w-6 h-6 text-gray-500" />
+                      </div>
+                      <p className="text-gray-500 text-sm">No purchases yet</p>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-700/30">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">
+                        {user.lastLogin ? `Last login: ${new Date(user.lastLogin).toLocaleDateString()}` : 'Never logged in'}
                       </span>
-                    </td>
-                    <td className="py-3 px-4 text-gray-400 text-sm">
-                      {user.lastPurchase ? user.lastPurchase.toLocaleDateString() : 'No purchases'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <button 
-                        className="text-gray-400 hover:text-white"
-                        title={`Total purchases: ${user.totalItems}`}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="7" className="py-8 px-4 text-center text-gray-400">
-                      {!contextUsers ? 'Users not loaded from context' : 
-                       !Array.isArray(contextUsers) ? 'Users data is not in array format' :
-                       contextUsers.length === 0 ? 'No users found in context' : 
-                       'No purchase data available'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-        
-        {/* Purchase Summary */}
-        {usersWithPurchases.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-700/50">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{usersWithPurchases.length}</div>
-                <div className="text-sm text-gray-400">Total Users</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">
-                  {usersWithPurchases.reduce((sum, user) => sum + user.purchasedGames.length, 0)}
+                      <span className="text-xs text-gray-500">
+                        Joined: {new Date(user.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <button className="text-gray-400 hover:text-white transition-colors">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Games Sold</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400">
-                  {usersWithPurchases.reduce((sum, user) => sum + user.purchasedDlcs.length, 0)}
+              ))}
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+              <div className="bg-gradient-to-r from-blue-600/20 to-blue-800/20 backdrop-blur-xl rounded-xl border border-blue-500/20 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-white">{usersWithPurchases.length}</div>
+                    <div className="text-blue-200 text-sm mt-1">Total Users</div>
+                    <div className="text-xs text-blue-300 mt-1">
+                      {usersWithPurchases.filter(u => u.role === 'super_admin').length} Admin(s)
+                    </div>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-400" />
                 </div>
-                <div className="text-sm text-gray-400">DLCs Sold</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">
-                  ${totalRevenue.toLocaleString()}
+
+              <div className="bg-gradient-to-r from-green-600/20 to-emerald-800/20 backdrop-blur-xl rounded-xl border border-green-500/20 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-white">
+                      {usersWithPurchases.reduce((sum, user) => sum + user.purchasedGames.length, 0)}
+                    </div>
+                    <div className="text-green-200 text-sm mt-1">Games Sold</div>
+                    <div className="text-xs text-green-300 mt-1">
+                      {usersWithPurchases.filter(u => u.purchasedGames.length > 0).length} buyers
+                    </div>
+                  </div>
+                  <PlayCircle className="w-8 h-8 text-green-400" />
                 </div>
-                <div className="text-sm text-gray-400">Total Revenue</div>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-600/20 to-purple-800/20 backdrop-blur-xl rounded-xl border border-purple-500/20 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-white">
+                      {usersWithPurchases.reduce((sum, user) => sum + user.purchasedDlcs.length, 0)}
+                    </div>
+                    <div className="text-purple-200 text-sm mt-1">DLCs Sold</div>
+                    <div className="text-xs text-purple-300 mt-1">
+                      {usersWithPurchases.filter(u => u.purchasedDlcs.length > 0).length} buyers
+                    </div>
+                  </div>
+                  <Package className="w-8 h-8 text-purple-400" />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-amber-600/20 to-orange-800/20 backdrop-blur-xl rounded-xl border border-amber-500/20 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-white">
+                      ${totalRevenue.toLocaleString()}
+                    </div>
+                    <div className="text-amber-200 text-sm mt-1">Total Revenue</div>
+                    <div className="text-xs text-amber-300 mt-1">
+                      Avg: ${usersWithPurchases.length > 0 ? (totalRevenue / usersWithPurchases.filter(u => u.totalSpent > 0).length || 0).toFixed(0) : '0'} per buyer
+                    </div>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-amber-400" />
+                </div>
               </div>
             </div>
+          </>
+        ) : (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-10 h-10 text-gray-500" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-400 mb-2">No Users Found</h3>
+            <p className="text-gray-500 text-sm">
+              Raw data type: {typeof user} | Is array: {Array.isArray(user) ? 'Yes' : 'No'} | Length: {contextUsers.length}
+            </p>
           </div>
         )}
       </div>

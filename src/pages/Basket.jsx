@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { GameContext } from "../context/DataContext";
 import SearchNav from "../components/SearchNav";
@@ -194,6 +194,7 @@ export default function Basket() {
                   >
                     {/* Image Container - Fixed aspect ratio */}
                     <div className="w-full md:w-[200px] md:min-w-[200px] relative">
+                    <Link to={`/details/${item.id}`} className="block">
                       <div className="aspect-[16/9] md:aspect-[3/4] overflow-hidden rounded-t-xl md:rounded-l-xl md:rounded-t-none">
                         <img
                           src={item.image}
@@ -201,6 +202,7 @@ export default function Basket() {
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
+                    </Link>
                     </div>
 
                     {/* Content Container */}

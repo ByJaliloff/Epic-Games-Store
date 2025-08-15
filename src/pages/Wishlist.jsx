@@ -238,13 +238,15 @@ function Wishlist() {
           <h1 className="text-[40px] font-bold text-[#ffffff] mb-10 text-center md:text-left">
             My Wishlist
           </h1>
-
           {checkingLibrary && (
-            <div className="text-center text-gray-400 mb-4">
-              Checking your library...
-            </div>
-          )}
-
+          <div className="text-center mb-4">
+            <img
+              src="/icons/icons8-loading.gif"
+              alt="Checking library..."
+              className="mx-auto w-8 h-8"
+            />
+          </div>
+        )}
           {wishlist.length === 0 ? (
             <div className="text-center mt-20 flex flex-col items-center justify-center">
               <div className="mb-4">
