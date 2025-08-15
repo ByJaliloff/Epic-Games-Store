@@ -205,14 +205,16 @@ export default function SearchNav() {
           )}
         </div>
 
-        {/* Mobile Discover dropdown - Now centered between search and icons */}
+        {/* Mobile Navigation dropdown - Now centered between search and icons */}
         <div className="flex md:hidden items-center justify-center absolute left-1/2 transform -translate-x-1/2">
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-1 text-gray-400 hover:text-white transition-all duration-200 text-sm font-medium active:scale-95"
+              className="flex items-center gap-1 text-white hover:text-gray-300 transition-all duration-200 text-sm font-medium active:scale-95"
             >
-              Discover
+              {location.pathname === "/" ? "Discover" : 
+               location.pathname === "/browse" ? "Browse" : 
+               location.pathname === "/news" ? "News" : "Discover"}
               <FiChevronDown
                 className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
               />
