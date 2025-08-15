@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import Error from "./Error";
 import Loader from "../components/Loader";
 import OrderModal from "../components/OrderModal";
-import { isGameInLibrary } from "../service.js/OrderService"; // Import the new function
+import { isGameInLibrary } from "../service.js/OrderService";
 
 function Details() {
   const { id } = useParams();
@@ -20,8 +20,8 @@ function Details() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isInCart, setIsInCart] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [isInLibrary, setIsInLibrary] = useState(false); // New state for library check
-  const [libraryCheckLoading, setLibraryCheckLoading] = useState(false); // Loading state for library check
+  const [isInLibrary, setIsInLibrary] = useState(false);
+  const [libraryCheckLoading, setLibraryCheckLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [mobileIndex, setMobileIndex] = useState(0);
   const [isTabChanging, setIsTabChanging] = useState(false);
@@ -32,7 +32,19 @@ function Details() {
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
 
-  // Library check effect - New useEffect for checking if game is in library
+  // Helper function to filter out empty/invalid images and videos
+  const getValidMedia = (game) => {
+    const validImages = game.carouselImages?.filter(img => img && img.trim() !== '') || [];
+    const hasValidVideo = game.video && game.video.trim() !== '' && ReactPlayer.canPlay(game.video);
+    
+    return {
+      images: validImages,
+      hasVideo: hasValidVideo,
+      totalCount: validImages.length + (hasValidVideo ? 1 : 0)
+    };
+  };
+
+  // Library check effect
   useEffect(() => {
     const checkLibrary = async () => {
       if (!user?.id || !id) {
@@ -55,44 +67,45 @@ function Details() {
     checkLibrary();
   }, [user?.id, id]);
 
-  // Cart and wishlist effect - Updated to use user-specific cart
+  // Cart and wishlist effect
   useEffect(() => {
     if ((!games?.length && !dlcs?.length) || !id) return;
     
     const item = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
-  if (!item) return;
+    if (!item) return;
     
-    // If user is not logged in, reset cart and wishlist status
     if (!user?.id) {
       setIsInCart(false);
       setIsInWishlist(false);
       return;
     }
     
-    // Updated cart to be user-specific like wishlist
- const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
-  const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
-  setIsInCart(cart.some((cartItem) => cartItem.id === item.id));
-  setIsInWishlist(wishlist.some((wishlistItem) => wishlistItem.id === item.id));
-}, [games, dlcs, id, user?.id]);
+    const cart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
+    const wishlist = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+    setIsInCart(cart.some((cartItem) => cartItem.id === item.id));
+    setIsInWishlist(wishlist.some((wishlistItem) => wishlistItem.id === item.id));
+  }, [games, dlcs, id, user?.id]);
 
-  // Carousel auto-scroll effect
-useEffect(() => {
-  if ((!games?.length && !dlcs?.length) || !id) return;
-  
-  const item = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
-  if (!item?.carouselImages?.length) return;
+  // Carousel auto-scroll effect with proper media validation
+  useEffect(() => {
+    if ((!games?.length && !dlcs?.length) || !id) return;
+    
+    const item = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
+    if (!item) return;
 
-  const interval = setInterval(() => {
-    setMobileIndex((prev) =>
-      prev >= item.carouselImages.length - 1 ? 0 : prev + 1
-    );
-  }, 4000);
+    const validMedia = getValidMedia(item);
+    if (validMedia.images.length === 0) return; // Don't auto-scroll if no valid images
 
-  return () => clearInterval(interval);
-}, [games, dlcs, id]); // Add dlcs to dependency array;
+    const interval = setInterval(() => {
+      setMobileIndex((prev) =>
+        prev >= validMedia.images.length - 1 ? 0 : prev + 1
+      );
+    }, 4000);
 
-  // Reset active tab to overview when game changes and it's not a base game
+    return () => clearInterval(interval);
+  }, [games, dlcs, id]);
+
+  // Reset active tab when game changes
   useEffect(() => {
     if ((!games?.length && !dlcs?.length) || !id) return;
     
@@ -104,6 +117,28 @@ useEffect(() => {
       setActiveTab("overview");
     }
   }, [id, games, dlcs, activeTab]);
+
+  // Reset video/image selection when game changes
+  useEffect(() => {
+    if ((!games?.length && !dlcs?.length) || !id) return;
+    
+    const game = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
+    if (!game) return;
+
+    const validMedia = getValidMedia(game);
+    
+    // Set initial display based on what's available
+    if (validMedia.hasVideo) {
+      setShowVideo(true);
+      setCurrentIndex(-1);
+    } else if (validMedia.images.length > 0) {
+      setShowVideo(false);
+      setCurrentIndex(0);
+    }
+
+    setMobileIndex(0);
+    setThumbnailStartIndex(0);
+  }, [id, games, dlcs]);
   
   // NOW we can do conditional returns after ALL hooks are declared
   if (loading) return <Loader />;
@@ -112,27 +147,28 @@ useEffect(() => {
   const game = games.find((g) => g.id === id) || dlcs.find((d) => d.id === id);
   if (!game) return <Error />;
 
-  // Check if current game is a base game to determine if Add-ons tab should be shown
+  // Get valid media for current game
+  const validMedia = getValidMedia(game);
+
+  // Check if current game is a base game
   const isBaseGame = game.type?.toLowerCase() === "basedgame";
 
-const relatedDlcs = dlcs.filter((dlc) => {
-  // If current item is a base game, show its DLCs
-  if (game.type === "basedgame") {
-    return dlc.gameId === id && 
-           ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
-  }
-  
-  // If current item is a DLC, show other DLCs for the same base game
-  if (game.gameId) {
-    return dlc.gameId === game.gameId && 
-           dlc.id !== id && // Exclude current item
-           ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
-  }
-  
-  return [];
-});
+  const relatedDlcs = dlcs.filter((dlc) => {
+    if (game.type === "basedgame") {
+      return dlc.gameId === id && 
+             ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
+    }
+    
+    if (game.gameId) {
+      return dlc.gameId === game.gameId && 
+             dlc.id !== id &&
+             ["addon", "edition", "editor", "demo"].includes(dlc.type?.toLowerCase());
+    }
+    
+    return [];
+  });
 
-  // Touch handlers
+  // Touch handlers for mobile
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -144,18 +180,18 @@ const relatedDlcs = dlcs.filter((dlc) => {
 
   const handleSwipeGesture = () => {
     if (!touchStartX.current || !touchEndX.current) return;
-    if (!game?.carouselImages) return;
+    if (validMedia.images.length === 0) return;
 
     const delta = touchStartX.current - touchEndX.current;
     const threshold = 50;
 
     if (delta > threshold) {
       setMobileIndex((prev) =>
-        prev >= game.carouselImages.length - 1 ? 0 : prev + 1
+        prev >= validMedia.images.length - 1 ? 0 : prev + 1
       );
     } else if (delta < -threshold) {
       setMobileIndex((prev) =>
-        prev === 0 ? game.carouselImages.length - 1 : prev - 1
+        prev === 0 ? validMedia.images.length - 1 : prev - 1
       );
     }
 
@@ -187,26 +223,49 @@ const relatedDlcs = dlcs.filter((dlc) => {
   };
 
   const nextIndex = () => {
+    if (validMedia.totalCount === 0) return;
+    
     setCurrentIndex((prev) => {
-      const maxIndex = game.carouselImages.length - 1;
-      return prev === maxIndex ? -1 : prev + 1;
+      const maxIndex = validMedia.images.length - 1;
+      if (validMedia.hasVideo) {
+        return prev === maxIndex ? -1 : prev + 1;
+      } else {
+        return prev >= maxIndex ? 0 : prev + 1;
+      }
     });
-    setShowVideo(false);
+    
+    if (validMedia.hasVideo && currentIndex === validMedia.images.length - 1) {
+      setShowVideo(true);
+    } else {
+      setShowVideo(false);
+    }
   };
 
   const prevIndex = () => {
+    if (validMedia.totalCount === 0) return;
+    
     setCurrentIndex((prev) => {
-      const maxIndex = game.carouselImages.length - 1;
-      return prev === -1 ? maxIndex : prev - 1;
+      const maxIndex = validMedia.images.length - 1;
+      if (validMedia.hasVideo) {
+        return prev === -1 ? maxIndex : prev - 1;
+      } else {
+        return prev <= 0 ? maxIndex : prev - 1;
+      }
     });
-    setShowVideo(false);
+    
+    if (validMedia.hasVideo && currentIndex === -1) {
+      setShowVideo(false);
+      setCurrentIndex(validMedia.images.length - 1);
+    } else {
+      setShowVideo(false);
+    }
   };
 
   const handleThumbnailClick = (idx) => {
-    if (idx === -1) {
+    if (idx === -1 && validMedia.hasVideo) {
       setShowVideo(true);
       setCurrentIndex(-1);
-    } else {
+    } else if (idx >= 0 && idx < validMedia.images.length) {
       setShowVideo(false);
       setCurrentIndex(idx);
     }
@@ -214,32 +273,49 @@ const relatedDlcs = dlcs.filter((dlc) => {
 
   // Thumbnail navigation functions
   const thumbnailsPerView = 3;
-  const totalThumbnails = (game?.carouselImages?.length || 0) + 1; // +1 for video thumbnail
+  const totalThumbnails = validMedia.totalCount;
   const maxStartIndex = Math.max(0, totalThumbnails - thumbnailsPerView);
 
   const nextThumbnails = () => {
-    if (isSliding) return; // Prevent rapid clicking during animation
+    if (isSliding) return;
     setIsSliding(true);
     setThumbnailStartIndex(prev => 
       prev >= maxStartIndex ? 0 : prev + 1
     );
-    setTimeout(() => setIsSliding(false), 300); // Match animation duration
+    setTimeout(() => setIsSliding(false), 300);
   };
 
   const prevThumbnails = () => {
-    if (isSliding) return; // Prevent rapid clicking during animation
+    if (isSliding) return;
     setIsSliding(true);
     setThumbnailStartIndex(prev => 
       prev <= 0 ? maxStartIndex : prev - 1
     );
-    setTimeout(() => setIsSliding(false), 300); // Match animation duration
+    setTimeout(() => setIsSliding(false), 300);
   };
 
   const getAllThumbnails = () => {
-    return [
-      { type: 'video', index: -1, src: `https://img.youtube.com/vi/${game?.video?.split("v=")[1]}/0.jpg` },
-      ...(game?.carouselImages?.map((img, idx) => ({ type: 'image', index: idx, src: img })) || [])
-    ];
+    const thumbnails = [];
+    
+    // Add video thumbnail if video exists
+    if (validMedia.hasVideo) {
+      const videoId = game.video.includes('youtube.com') || game.video.includes('youtu.be') 
+        ? game.video.split("v=")[1]?.split("&")[0] || game.video.split("/").pop()
+        : null;
+      
+      thumbnails.push({ 
+        type: 'video', 
+        index: -1, 
+        src: videoId ? `https://img.youtube.com/vi/${videoId}/0.jpg` : '/placeholder-video.jpg'
+      });
+    }
+    
+    // Add image thumbnails
+    validMedia.images.forEach((img, idx) => {
+      thumbnails.push({ type: 'image', index: idx, src: img });
+    });
+    
+    return thumbnails;
   };
 
   // Enhanced tab switching with animation
@@ -253,7 +329,7 @@ const relatedDlcs = dlcs.filter((dlc) => {
     }, 150);
   };
 
-  // Updated addToCart function to use user-specific cart and check library
+  // Updated addToCart function
   const addToCart = () => {
     if (!user?.id) {
       toast.error("Please log in to add items to cart");
@@ -284,7 +360,6 @@ const relatedDlcs = dlcs.filter((dlc) => {
       );
     }
 
-    // Remove from wishlist if adding to cart
     if (wishlist.find((item) => item.id === game.id)) {
       const updatedWishlist = wishlist.filter((item) => item.id !== game.id);
       localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
@@ -322,7 +397,6 @@ const relatedDlcs = dlcs.filter((dlc) => {
     }
   };
 
-  // New function to handle "Buy Now" click with library check
   const handleBuyNow = () => {
     if (!user?.id) {
       toast.error("Please log in to purchase games");
@@ -351,7 +425,6 @@ const relatedDlcs = dlcs.filter((dlc) => {
     );
   }
 
-  // Enhanced video navigation arrows
   const VideoArrow = ({ direction, onClick }) => (
     <button 
       onClick={onClick} 
@@ -388,13 +461,10 @@ const relatedDlcs = dlcs.filter((dlc) => {
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-bold mb-2 leading-tight">{game.title}</h1>
           {activeTab === "overview" && (
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-2">
-              {/* Features - Show first on mobile */}
               <div className="flex gap-3 sm:gap-4 text-gray-300 text-xs sm:text-sm order-1 sm:order-2 flex-wrap">
                 <div className="flex items-center gap-1 font-semibold">🌐 Diverse Characters</div>
                 <div className="flex items-center gap-1 font-semibold">📜 Amazing Storytelling</div>
               </div>
-
-              {/* Rating stars */}
               <div className="order-2 sm:order-1">
                 <RatingStars rating={game.rating} />
               </div>
@@ -402,7 +472,7 @@ const relatedDlcs = dlcs.filter((dlc) => {
           )}
         </div>
 
-        {/* Navigation tabs - Only show Add-ons tab for base games */}
+        {/* Navigation tabs */}
         <nav className="flex gap-4 sm:gap-6 text-white text-sm sm:text-base mt-6 overflow-x-auto scrollbar-hide">
           {["overview", ...(isBaseGame ? ["Add-ons"] : [])].map((tab) => (
             <button
@@ -426,103 +496,126 @@ const relatedDlcs = dlcs.filter((dlc) => {
               {/* Left Panel */}
               <div className="order-2 xl:order-1 xl:col-span-2 w-full flex flex-col gap-6 sm:gap-8">
                 {/* Video & Carousel - Desktop */}
-                <div className="hidden md:flex aspect-video rounded-xl overflow-hidden relative group shadow-2xl">
-                  {(showVideo || currentIndex === -1) ? (
-                    <ReactPlayer src={game.video} muted playing controls loop width="100%" height="100%" />
-                  ) : (
-                    <img
-                      src={getOriginalImageUrl(game.carouselImages[currentIndex])}
-                      alt={`Selected ${currentIndex + 1}`}
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  )}
-                  <VideoArrow direction="left" onClick={prevIndex} />
-                  <VideoArrow direction="right" onClick={nextIndex} />
-                </div>
+                {validMedia.totalCount > 0 ? (
+                  <>
+                    <div className="hidden md:flex aspect-video rounded-xl overflow-hidden relative group shadow-2xl">
+                      {(showVideo && validMedia.hasVideo) ? (
+                        <ReactPlayer src={game.video} muted playing controls loop width="100%" height="100%" />
+                      ) : (
+                        validMedia.images.length > 0 && (
+                          <img
+                            src={getOriginalImageUrl(validMedia.images[Math.max(0, currentIndex)])}
+                            alt={`Selected ${currentIndex + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                        )
+                      )}
+                      {validMedia.totalCount > 1 && (
+                        <>
+                          <VideoArrow direction="left" onClick={prevIndex} />
+                          <VideoArrow direction="right" onClick={nextIndex} />
+                        </>
+                      )}
+                    </div>
 
-                {/* Thumbnail Scroll - Desktop */}
-                <div className="hidden md:flex items-center gap-4 mt-4 justify-center max-w-[500px] mx-auto">
-                  {/* Left Arrow for Thumbnail Sliding */}
-                  <button 
-                    onClick={prevThumbnails}
-                    disabled={totalThumbnails <= thumbnailsPerView || isSliding}
-                    className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
-                      <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
+                    {/* Thumbnail Scroll - Desktop */}
+                    {validMedia.totalCount > 1 && (
+                      <div className="hidden md:flex items-center gap-4 mt-4 justify-center max-w-[500px] mx-auto">
+                        {totalThumbnails > thumbnailsPerView && (
+                          <button 
+                            onClick={prevThumbnails}
+                            disabled={isSliding}
+                            className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
+                              <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
 
-                  {/* Thumbnails Container - With sliding animation */}
-                  <div className="relative w-[300px] h-16 overflow-hidden">
-                    <div 
-                      className="flex gap-3 absolute transition-transform duration-300 ease-in-out"
-                      style={{ 
-                        transform: `translateX(-${thumbnailStartIndex * 108}px)`, // 96px (w-24) + 12px (gap-3) = 108px per thumbnail
-                        width: `${totalThumbnails * 108}px`
-                      }}
-                    >
-                      {getAllThumbnails().map((thumbnail, idx) => (
-                        <img
-                          key={`${thumbnail.type}-${thumbnail.index}`}
-                          src={thumbnail.src}
-                          alt={thumbnail.type === 'video' ? 'Video Thumbnail' : `Slide ${thumbnail.index + 1}`}
-                          className={`w-24 h-16 object-cover rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 shrink-0 ${
-                            (thumbnail.type === 'video' && currentIndex === -1) || 
-                            (thumbnail.type === 'image' && currentIndex === thumbnail.index)
-                              ? "brightness-100 shadow-lg" 
-                              : "brightness-75 hover:brightness-90"
-                          }`}
-                          onClick={() => handleThumbnailClick(thumbnail.index)}
-                        />
-                      ))}
+                        <div className="relative w-[300px] h-16 overflow-hidden">
+                          <div 
+                            className="flex gap-3 absolute transition-transform duration-300 ease-in-out"
+                            style={{ 
+                              transform: `translateX(-${thumbnailStartIndex * 108}px)`,
+                              width: `${totalThumbnails * 108}px`
+                            }}
+                          >
+                            {getAllThumbnails().map((thumbnail, idx) => (
+                              <img
+                                key={`${thumbnail.type}-${thumbnail.index}`}
+                                src={thumbnail.src}
+                                alt={thumbnail.type === 'video' ? 'Video Thumbnail' : `Slide ${thumbnail.index + 1}`}
+                                className={`w-24 h-16 object-cover rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 shrink-0 ${
+                                  (thumbnail.type === 'video' && showVideo && validMedia.hasVideo) || 
+                                  (thumbnail.type === 'image' && !showVideo && currentIndex === thumbnail.index)
+                                    ? "brightness-100 shadow-lg" 
+                                    : "brightness-75 hover:brightness-90"
+                                }`}
+                                onClick={() => handleThumbnailClick(thumbnail.index)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {totalThumbnails > thumbnailsPerView && (
+                          <button 
+                            onClick={nextThumbnails}
+                            disabled={isSliding}
+                            className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
+                              <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Mobile Thumbnail Slider */}
+                    {validMedia.images.length > 0 && (
+                      <div className="md:hidden mt-4 relative overflow-hidden rounded-lg shadow-xl">
+                        <div
+                          className="flex transition-transform duration-500 ease-in-out"
+                          style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
+                          onTouchStart={handleTouchStart}
+                          onTouchEnd={handleTouchEnd}
+                        >
+                          {validMedia.images.map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`Slide ${idx + 1}`}
+                              className="w-full h-48 sm:h-56 object-cover flex-shrink-0 cursor-pointer"
+                              onClick={() => handleThumbnailClick(idx)}
+                            />
+                          ))}
+                        </div>
+
+                        {validMedia.images.length > 1 && (
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/40 backdrop-blur-sm px-3 py-2 rounded-full">
+                            {validMedia.images.map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${
+                                  i === mobileIndex ? "bg-white scale-125" : "bg-gray-400 hover:bg-gray-300"
+                                }`}
+                                onClick={() => setMobileIndex(i)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="aspect-video rounded-xl bg-gray-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2 opacity-50">🎮</div>
+                      <p className="text-gray-400">No media available</p>
                     </div>
                   </div>
-
-                  {/* Right Arrow for Thumbnail Sliding */}
-                  <button 
-                    onClick={nextThumbnails}
-                    disabled={totalThumbnails <= thumbnailsPerView || isSliding}
-                    className="bg-gray-800/80 hover:bg-gray-700 disabled:bg-gray-800/40 disabled:cursor-not-allowed backdrop-blur-sm rounded-full p-3 hover:scale-110 transition-all duration-200 shrink-0 border border-gray-600/50 shadow-lg group"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:scale-110 transition-transform">
-                      <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* Mobile Thumbnail Slider */}
-                <div className="md:hidden mt-4 relative overflow-hidden rounded-lg shadow-xl">
-                  <div
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    {game.carouselImages.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`Slide ${idx + 1}`}
-                        className="w-full h-48 sm:h-56 object-cover flex-shrink-0 cursor-pointer"
-                        onClick={() => handleThumbnailClick(idx)}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Enhanced Dots */}
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/40 backdrop-blur-sm px-3 py-2 rounded-full">
-                    {[...Array(game.carouselImages.length)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${
-                          i === mobileIndex ? "bg-white scale-125" : "bg-gray-400 hover:bg-gray-300"
-                        }`}
-                        onClick={() => setMobileIndex(i)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Short Description */}
                 <p className="text-sm sm:text-base text-white leading-relaxed">{game.shortDescription}</p>
@@ -582,89 +675,86 @@ const relatedDlcs = dlcs.filter((dlc) => {
                 </div>
 
                 {/* Buttons */}
-               <div className="space-y-3">
-                    {/* Əgər kitabxanadadırsa, yalnız 1 dənə düymə */}
-                    {isInLibrary ? (
-                            <button
-                              disabled
-                              className="w-full flex items-center justify-center gap-2 bg-[#88888a] text-black py-3 sm:py-4 rounded-md font-semibold cursor-not-allowed opacity-80"
-                            >
-                              {/* Sol ikon */}
-                              <svg
-                                aria-hidden="true"
-                                className="w-5 h-5"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  clipRule="evenodd"
-                                  d="M5.5 3.25A2.25 2.25 0 0 0 3.25 5.5v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3A2.25 2.25 0 0 0 8.5 3.25zM4.75 5.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm.75 7.75a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm8.5 0a2.25 2.25 0 0 1 2.25-2.25h3a2.25 2.25 0 0 1 2.25 2.25v3a2.25 2.25 0 0 1-2.25 2.25h-3a2.25 2.25 0 0 1-2.25-2.25zm2.25-.75a.75.75 0 0 0-.75.75v3c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-3a.75.75 0 0 0-.75-.75zm0-11.5a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75z"
-                                />
-                              </svg>
+                <div className="space-y-3">
+                  {isInLibrary ? (
+                    <button
+                      disabled
+                      className="w-full flex items-center justify-center gap-2 bg-[#88888a] text-black py-3 sm:py-4 rounded-md font-semibold cursor-not-allowed opacity-80"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        className="w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          clipRule="evenodd"
+                          d="M5.5 3.25A2.25 2.25 0 0 0 3.25 5.5v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3A2.25 2.25 0 0 0 8.5 3.25zM4.75 5.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm.75 7.75a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75zm8.5 0a2.25 2.25 0 0 1 2.25-2.25h3a2.25 2.25 0 0 1 2.25 2.25v3a2.25 2.25 0 0 1-2.25 2.25h-3a2.25 2.25 0 0 1-2.25-2.25zm2.25-.75a.75.75 0 0 0-.75.75v3c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-3a.75.75 0 0 0-.75-.75zm0-11.5a2.25 2.25 0 0 0-2.25 2.25v3a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-3a2.25 2.25 0 0 0-2.25-2.25zm-.75 2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75z"
+                        />
+                      </svg>
+                      In Library
+                    </button>
+                  ) : (
+                    <>
+                      {/* Buy Now Button */}
+                      <button
+                        className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg" 
+                        onClick={handleBuyNow}
+                        disabled={libraryCheckLoading}
+                      >
+                        {libraryCheckLoading
+                          ? "Checking..."
+                          : isFree
+                            ? "Get"
+                            : game.releaseDate?.toLowerCase() === "upcoming"
+                              ? "Pre-purchase"
+                              : "Buy Now"}
+                      </button>
 
-                              In Library
-                            </button>
-
-                    ) : (
-                      <>
-                        {/* Buy Now Button */}
+                      {/* Add to Cart Button */}
+                      {isInCart ? (
                         <button
-                          className="w-full bg-[#1e90ff] hover:bg-blue-500 text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02] shadow-lg" 
-                          onClick={handleBuyNow}
+                          type="button"
+                          onClick={() => navigate("/basket")}
+                          className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                        >
+                          View in Cart
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={addToCart}
+                          className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
                           disabled={libraryCheckLoading}
                         >
-                          {libraryCheckLoading
-                            ? "Checking..."
-                            : isFree
-                              ? "Get"
-                              : game.releaseDate?.toLowerCase() === "upcoming"
-                                ? "Pre-purchase"
-                                : "Buy Now"}
+                          {libraryCheckLoading ? "Checking..." : "Add To Cart"}
                         </button>
+                      )}
 
-                        {/* Add to Cart Button */}
-                        {isInCart ? (
-                          <button
-                            type="button"
-                            onClick={() => navigate("/basket")}
-                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                          >
-                            View in Cart
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={addToCart}
-                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                            disabled={libraryCheckLoading}
-                          >
-                            {libraryCheckLoading ? "Checking..." : "Add To Cart"}
-                          </button>
-                        )}
+                      {/* Add to Wishlist Button */}
+                      {isInWishlist ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate("/wishlist")}
+                          className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                        >
+                          View in Wishlist
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={addToWishlist}
+                          className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
+                          disabled={libraryCheckLoading}
+                        >
+                          {libraryCheckLoading ? "Checking..." : "Add to Wishlist"}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
 
-                        {/* Add to Wishlist Button */}
-                        {isInWishlist ? (
-                          <button
-                            type="button"
-                            onClick={() => navigate("/wishlist")}
-                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                          >
-                            View in Wishlist
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={addToWishlist}
-                            className="w-full bg-gray-700 hover:bg-[#636366] text-white py-3 sm:py-4 rounded-md font-semibold transition-all duration-200 hover:scale-[1.02]"
-                            disabled={libraryCheckLoading}
-                          >
-                            {libraryCheckLoading ? "Checking..." : "Add to Wishlist"}
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
                 {/* Technical Information */}
                 <div className="mt-6 text-xs sm:text-sm text-white pt-4 space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center border-b border-gray-600 pb-3 sm:pb-4 font-semibold">
@@ -685,13 +775,11 @@ const relatedDlcs = dlcs.filter((dlc) => {
                       {game.platforms?.map((platform, index) => (
                         <div key={index} className="group relative">
                           {platformIcons[platform] && (
-                            <>
-                              <img
-                                src={platformIcons[platform]}
-                                alt={platform}
-                                className="w-4 h-4 sm:w-5 sm:h-5 hover:scale-110 transition-transform duration-200"
-                              />
-                            </>
+                            <img
+                              src={platformIcons[platform]}
+                              alt={platform}
+                              className="w-4 h-4 sm:w-5 sm:h-5 hover:scale-110 transition-transform duration-200"
+                            />
                           )}
                         </div>
                       ))}

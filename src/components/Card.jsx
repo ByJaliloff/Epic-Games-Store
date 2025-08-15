@@ -7,12 +7,13 @@ import Loader from "./Loader";
 import Error from "../pages/Error";
 import { GameContext } from "../context/DataContext";
 
-function Card({ games, dlcs, loading, error }) {
+function Card({ games = [], dlcs = [], loading, error }) {
   const { user } = useContext(GameContext);
   const navigate = useNavigate();
 
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [processingError, setProcessingError] = useState(null);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -27,10 +28,15 @@ function Card({ games, dlcs, loading, error }) {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
-      setWishlistItems(saved);
-    } else {
+    try {
+      if (user) {
+        const saved = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+        setWishlistItems(saved);
+      } else {
+        setWishlistItems([]);
+      }
+    } catch (err) {
+      console.error("Error loading wishlist:", err);
       setWishlistItems([]);
     }
   }, [user]);
@@ -44,38 +50,41 @@ function Card({ games, dlcs, loading, error }) {
       return;
     }
 
-    const exists = wishlistItems.find((i) => i.id === item.id);
-    let updatedWishlist;
+    try {
+      const exists = wishlistItems.find((i) => i.id === item.id);
+      let updatedWishlist;
 
-    if (exists) {
-      updatedWishlist = wishlistItems.filter((i) => i.id !== item.id);
-      toast.info(
-        <div className="flex items-center gap-3">
-          <img src={item.image} alt={item.title} className="w-10 h-10 object-cover rounded" />
-          <div>
-            <p className="text-white font-semibold">{item.title}</p>
-            <p className="text-gray-300 text-sm">Removed from wishlist</p>
+      if (exists) {
+        updatedWishlist = wishlistItems.filter((i) => i.id !== item.id);
+        toast.info(
+          <div className="flex items-center gap-3">
+            <img src={item.image} alt={item.title} className="w-10 h-10 object-cover rounded" />
+            <div>
+              <p className="text-white font-semibold">{item.title}</p>
+              <p className="text-gray-300 text-sm">Removed from wishlist</p>
+            </div>
           </div>
-        </div>
-      );
-    } else {
-      updatedWishlist = [...wishlistItems, item];
-      toast.success(
-        <div className="flex items-center gap-3">
-          <img src={item.image} alt={item.title} className="w-10 h-10 rounded object-cover" />
-          <div>
-            <p className="font-semibold text-white">{item.title}</p>
-            <p className="text-sm text-gray-300">Added to wishlist</p>
+        );
+      } else {
+        updatedWishlist = [...wishlistItems, item];
+        toast.success(
+          <div className="flex items-center gap-3">
+            <img src={item.image} alt={item.title} className="w-10 h-10 rounded object-cover" />
+            <div>
+              <p className="font-semibold text-white">{item.title}</p>
+              <p className="text-sm text-gray-300">Added to wishlist</p>
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
+
+      setWishlistItems(updatedWishlist);
+      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
+    } catch (err) {
+      console.error("Error handling wishlist:", err);
+      toast.error("Failed to update wishlist");
     }
-
-    setWishlistItems(updatedWishlist);
-    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
   };
-
-
 
   const [startIndexes, setStartIndexes] = useState({
     discover: 0,
@@ -94,48 +103,127 @@ function Card({ games, dlcs, loading, error }) {
     addon: "Addon",
   };
 
-  const today = dayjs();
+  // Safe data processing with error handling
+  const processGamesData = () => {
+    try {
+      if (!Array.isArray(games) || !Array.isArray(dlcs)) {
+        throw new Error("Invalid data format: games and dlcs must be arrays");
+      }
 
-  const newReleases = [...games]
-    .filter((g) => g.type === "basedgame" && g.releaseDate && dayjs(g.releaseDate).isBefore(today))
-    .sort((a, b) => dayjs(b.releaseDate).diff(dayjs(a.releaseDate)));
+      const today = dayjs();
 
-  const topRated = [...games]
-    .filter((g) => g.type === "basedgame" && g.rating)
-    .sort((a, b) => Math.abs(5 - a.rating) - Math.abs(5 - b.rating));
+      const newReleases = games
+        .filter((g) => {
+          try {
+            return g && 
+                   g.type === "basedgame" && 
+                   g.releaseDate && 
+                   g.releaseDate !== "upcoming" &&
+                   dayjs(g.releaseDate).isValid() && 
+                   dayjs(g.releaseDate).isBefore(today);
+          } catch {
+            return false;
+          }
+        })
+        .sort((a, b) => {
+          try {
+            return dayjs(b.releaseDate).diff(dayjs(a.releaseDate));
+          } catch {
+            return 0;
+          }
+        });
 
-  const comingSoon = [...games].filter((g) => g.releaseDate === "upcoming");
+      const topRated = games
+        .filter((g) => {
+          try {
+            return g && 
+                   g.type === "basedgame" && 
+                   g.rating && 
+                   !isNaN(parseFloat(g.rating));
+          } catch {
+            return false;
+          }
+        })
+        .sort((a, b) => {
+          try {
+            const ratingA = parseFloat(a.rating) || 0;
+            const ratingB = parseFloat(b.rating) || 0;
+            return Math.abs(5 - ratingA) - Math.abs(5 - ratingB);
+          } catch {
+            return 0;
+          }
+        });
 
-  const filtered = {
-    discover: games.filter(
-      (g) =>
-        g.type === "basedgame" &&
-        !(g.price === "Free" || g.price === 0 || g.isFree === true) &&
-        !g.discount
-    ),
-    sale: games.filter(
-      (g) =>
-        g.type === "basedgame" &&
-        !(g.price === "Free" || g.price === 0 || g.isFree === true) &&
-        g.discount
-    ),
-    free: games.filter(
-      (g) =>
-        g.type === "basedgame" &&
-        (g.price === "Free" || g.price === 0 || g.isFree === true)
-    ),
-    edition: dlcs.filter((d) => d.type === "edition" || d.type === "addon"),
-    new: newReleases,
-    top: topRated,
-    upcoming: comingSoon,
+      const comingSoon = games.filter((g) => g && g.releaseDate === "upcoming");
+
+      const filtered = {
+        discover: games.filter(
+          (g) =>
+            g &&
+            g.type === "basedgame" &&
+            !(g.price === "Free" || g.price === 0 || g.isFree === true) &&
+            !g.discount
+        ),
+        sale: games.filter(
+          (g) =>
+            g &&
+            g.type === "basedgame" &&
+            !(g.price === "Free" || g.price === 0 || g.isFree === true) &&
+            g.discount
+        ),
+        free: games.filter(
+          (g) =>
+            g &&
+            g.type === "basedgame" &&
+            (g.price === "Free" || g.price === 0 || g.isFree === true)
+        ),
+        edition: dlcs.filter((d) => d && (d.type === "edition" || d.type === "addon")),
+        new: newReleases,
+        top: topRated,
+        upcoming: comingSoon,
+      };
+
+      return filtered;
+    } catch (err) {
+      console.error("Error processing games data:", err);
+      setProcessingError(err.message);
+      return {
+        discover: [],
+        sale: [],
+        free: [],
+        edition: [],
+        new: [],
+        top: [],
+        upcoming: [],
+      };
+    }
+  };
+
+  // Safe price calculation
+  const calculatePrice = (item) => {
+    try {
+      const isFree = item.price === "Free" || item.price === 0 || item.isFree === true;
+      const price = isFree ? 0 : (parseFloat(item.price) || 0);
+      const isDiscounted = item.discount && parseFloat(item.discount) > 0;
+      const discountedPrice = isDiscounted
+        ? (price - (price * parseFloat(item.discount)) / 100).toFixed(2)
+        : null;
+
+      return { isFree, price, isDiscounted, discountedPrice };
+    } catch (err) {
+      console.error("Error calculating price:", err);
+      return { isFree: true, price: 0, isDiscounted: false, discountedPrice: null };
+    }
   };
 
   if (loading) return <Loader />;
-  if (error) return <Error />;
+  if (error || processingError) return <Error />;
+
+  const filtered = processGamesData();
 
   const handleSlide = (type, direction) => {
     setStartIndexes((prev) => {
-      const max = filtered[type].length - cardsPerPage;
+      const max = Math.max(0, filtered[type].length - cardsPerPage);
       const nextIndex = prev[type] + direction * cardsPerPage;
       return {
         ...prev,
@@ -145,6 +233,8 @@ function Card({ games, dlcs, loading, error }) {
   };
 
   const renderCards = (items, type, isMobileView = false) => {
+    if (!Array.isArray(items)) return null;
+
     const containerClass = isMobileView
       ? "flex gap-4 overflow-x-auto scrollbar-hide pb-2"
       : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6";
@@ -152,14 +242,9 @@ function Card({ games, dlcs, loading, error }) {
     return (
       <div className={containerClass}>
         {items.map((item) => {
-          const isDiscounted = item.discount && item.discount > 0;
-          const isFree =
-            item.price === "Free" || item.price === 0 || item.isFree === true;
-          const price = isFree ? 0 : parseFloat(item.price);
-          const discountedPrice = isDiscounted
-            ? (price - (price * item.discount) / 100).toFixed(2)
-            : null;
+          if (!item || !item.id) return null;
 
+          const { isFree, price, isDiscounted, discountedPrice } = calculatePrice(item);
           const isInWishlist = wishlistItems.some((w) => w.id === item.id);
 
           const CardContent = (
@@ -169,9 +254,12 @@ function Card({ games, dlcs, loading, error }) {
                 {/* Fixed aspect ratio container */}
                 <div className="aspect-[3/4] overflow-hidden">
                   <img
-                    src={item.image}
-                    alt={item.title}
+                    src={item.image || '/placeholder-image.jpg'}
+                    alt={item.title || 'Game'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      e.target.src = '/placeholder-image.jpg';
+                    }}
                   />
                 </div>
                 
@@ -204,10 +292,10 @@ function Card({ games, dlcs, loading, error }) {
               <div className="p-3 md:p-4 flex flex-col h-[120px] md:h-[140px] justify-between">
                 <div>
                   <p className="text-[#ffffffa6] text-[10px] md:text-[12px] font-semibold mb-1">
-                    {typeMapping[item.type] || item.type}
+                    {typeMapping[item.type] || item.type || 'Game'}
                   </p>
                   <h2 className="text-[#fff] font-bold text-[14px] md:text-[16px] leading-tight line-clamp-2">
-                    {item.title}
+                    {item.title || 'Unknown Game'}
                   </h2>
                 </div>
 
@@ -217,7 +305,7 @@ function Card({ games, dlcs, loading, error }) {
                   ) : isDiscounted ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-[#26BBFF] text-black font-semibold text-[10px] md:text-[12px] px-2 py-0.5 rounded">
-                        -{item.discount}%
+                        -{Math.round(parseFloat(item.discount) || 0)}%
                       </span>
                       <span className="line-through text-[#888] text-[12px] md:text-[14px]">
                         ${price.toFixed(2)}
@@ -236,21 +324,27 @@ function Card({ games, dlcs, loading, error }) {
             </div>
           );
 
-            return (
-              <Link
-                to={`/details/${item.id}`}
-                key={item.id}
-                className="text-left block"
-              >
-                {CardContent}
-              </Link>
-            );
-                    })}
-                  </div>
-                );
-              };
+          return (
+            <Link
+              to={`/details/${item.id}`}
+              key={item.id}
+              className="text-left block"
+            >
+              {CardContent}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  };
 
   const Section = ({ title, type }) => {
+    const items = filtered[type] || [];
+    
+    if (items.length === 0) {
+      return null; // Don't render empty sections
+    }
+
     return (
       <div className="py-6 md:py-8">
         <div className="max-w-[95%] sm:max-w-[90%] md:max-w-[88%] lg:max-w-[85%] xl:max-w-[80%] 2xl:max-w-[75%] mx-auto flex items-center justify-between mb-4 md:mb-6">
@@ -283,9 +377,9 @@ function Card({ games, dlcs, loading, error }) {
             </button>
             <button
               onClick={() => handleSlide(type, 1)}
-              disabled={startIndexes[type] + cardsPerPage >= filtered[type].length}
+              disabled={startIndexes[type] + cardsPerPage >= items.length}
               className={`p-2 rounded-full transition-all ${
-                startIndexes[type] + cardsPerPage >= filtered[type].length
+                startIndexes[type] + cardsPerPage >= items.length
                   ? 'opacity-30 cursor-not-allowed'
                   : 'opacity-80 hover:opacity-100 hover:bg-white/10'
               }`}
@@ -301,9 +395,9 @@ function Card({ games, dlcs, loading, error }) {
 
         <div className="max-w-[95%] sm:max-w-[90%] md:max-w-[88%] lg:max-w-[85%] xl:max-w-[80%] 2xl:max-w-[75%] mx-auto">
           {isMobile
-            ? renderCards(filtered[type], type, true)
+            ? renderCards(items, type, true)
             : renderCards(
-                filtered[type].slice(
+                items.slice(
                   startIndexes[type],
                   startIndexes[type] + cardsPerPage
                 ),
@@ -316,7 +410,27 @@ function Card({ games, dlcs, loading, error }) {
   };
 
   const SectionStatic = ({ title, type, index }) => {
-    const items = filtered[type].slice(0, 5);
+    const items = (filtered[type] || []).slice(0, 5);
+
+    if (items.length === 0) {
+      return (
+        <div
+          className={`p-4 md:p-6 ${
+            index !== 2 && "lg:border-r lg:border-gray-600"
+          } ${
+            index % 2 === 0 && "sm:border-r sm:border-gray-600 lg:border-0"
+          }`}
+        >
+          <h2 className="text-white text-[18px] md:text-[20px] lg:text-[24px] font-bold mb-4 flex items-center gap-2">
+            {title} 
+            <span className="text-gray-400 text-sm transition-all duration-300 hover:ml-1">
+              {'>'}
+            </span>
+          </h2>
+          <p className="text-gray-400 text-sm">No items available</p>
+        </div>
+      );
+    }
 
     return (
       <div
@@ -335,13 +449,9 @@ function Card({ games, dlcs, loading, error }) {
 
         <div className="flex flex-col gap-2 md:gap-3">
           {items.map((item) => {
-            const isDiscounted = item.discount && item.discount > 0;
-            const isFree =
-              item.price === "Free" || item.price === 0 || item.isFree === true;
-            const price = isFree ? 0 : parseFloat(item.price);
-            const discountedPrice = isDiscounted
-              ? (price - (price * item.discount) / 100).toFixed(2)
-              : null;
+            if (!item || !item.id) return null;
+
+            const { isFree, price, isDiscounted, discountedPrice } = calculatePrice(item);
             const isInWishlist = wishlistItems.some((w) => w.id === item.id);
 
             return (
@@ -353,9 +463,12 @@ function Card({ games, dlcs, loading, error }) {
                 <div className="relative flex-shrink-0">
                   <div className="w-12 h-16 md:w-15 md:h-20 overflow-hidden rounded-md">
                     <img
-                      src={item.image}
-                      alt={item.title}
+                      src={item.image || '/placeholder-image.jpg'}
+                      alt={item.title || 'Game'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-image.jpg';
+                      }}
                     />
                   </div>
                   <div
@@ -376,7 +489,7 @@ function Card({ games, dlcs, loading, error }) {
                   className="flex flex-col text-white min-w-0 flex-1 cursor-pointer"
                 >
                   <span className="font-semibold text-sm md:text-base line-clamp-1 mb-1">
-                    {item.title}
+                    {item.title || 'Unknown Game'}
                   </span>
 
                   {isFree ? (
@@ -386,7 +499,7 @@ function Card({ games, dlcs, loading, error }) {
                   ) : isDiscounted ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-[#26BBFF] text-black text-[10px] md:text-xs font-semibold px-2 py-0.5 rounded">
-                        -{item.discount}%
+                        -{Math.round(parseFloat(item.discount) || 0)}%
                       </span>
                       <span className="text-xs md:text-sm line-through text-gray-400">
                         ${price.toFixed(2)}

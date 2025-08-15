@@ -5,6 +5,10 @@ import { GameContext } from "../context/DataContext";
 
 function Slider({ slides, games }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+
   const { user } = useContext(GameContext);
   const navigate = useNavigate();
 
@@ -46,6 +50,43 @@ function Slider({ slides, games }) {
     const foundGame = games.find((game) => game.id === gameId);
     if (foundGame) {
       navigate(`/details/${foundGame.id}`);
+    }
+  };
+
+  // Enhanced thumbnail click handler
+  const handleThumbnailClick = (index) => {
+    if (index === activeIndex) return;
+    setActiveIndex(index);
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd || isAnimating) return;
+    
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    
+    if (distance > minSwipeDistance) {
+      // Swiped left - go to next slide
+      setIsAnimating(true);
+      setActiveIndex((prev) => (prev + 1) % slides.length);
+      setTimeout(() => setIsAnimating(false), 400);
+    }
+    
+    if (distance < -minSwipeDistance) {
+      // Swiped right - go to previous slide
+      setIsAnimating(true);
+      setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
+      setTimeout(() => setIsAnimating(false), 400);
     }
   };
 
@@ -115,18 +156,47 @@ function Slider({ slides, games }) {
 
   return (
     <div className="bg-[#0f0f10]">
+      {/* Add mobile animation CSS */}
+      <style jsx>{`
+        .mobile-slide-enter {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        
+        .mobile-slide-enter-active {
+          opacity: 1;
+          transform: scale(1);
+          transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                      transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .mobile-content-enter {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        
+        .mobile-content-enter-active {
+          opacity: 1;
+          transform: translateY(0);
+          transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s,
+                      transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
+        }
+      `}</style>
+
       <div className="hidden md:flex flex-col md:flex-row gap-6 px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
         {/* Böyük slayd */}
         <div
           onClick={() => {
             if (window.innerWidth < 768) handleBuyNow();
           }}
-          className="flex-1 relative rounded-2xl overflow-hidden min-h-[400px] md:min-h-[500px] cursor-pointer"
+          className="flex-1 relative rounded-2xl overflow-hidden cursor-pointer"
+          style={{ height: `${slides.length * 88}px` }} // 88px per thumbnail (84px height + 4px gap)
         >
           <img
             src={activeSlide.image}
             alt={activeSlide.title}
             className="w-full h-full object-cover"
+            key={`${activeSlide.id}-${activeIndex}`}
           />
 
           {/* Wishlist ikon — yalnız mobil üçün */}
@@ -156,40 +226,43 @@ function Slider({ slides, games }) {
                   alt={`${activeSlide.title} logo`}
                   className="h-[60px] md:h-[80px] object-contain mb-5"
                   style={{ alignSelf: "flex-start" }}
+                  key={`logo-${activeSlide.id}-${activeIndex}`}
                 />
               )}
             </div>
 
-            <p className="text-sm md:text-base font-semibold uppercase">{activeSlide.subtitle}</p>
-            <p className="text-sm md:text-base md:w-1/2 w-full">{activeSlide.description}</p>
-            <p className="text-md font-semibold">{activeSlide.price}</p>
+            <div>
+              <p className="text-sm  font-semibold uppercase mb-4">{activeSlide.subtitle}</p>
+              <p className="text-sm md:text-base md:w-1/2 w-full mb-6">{activeSlide.description}</p>
+              <p className="text-md font-semibold">{activeSlide.price}</p>
 
-            {/* Buttonlar — yalnız md və yuxarıda görünür */}
-            <div className="gap-3 hidden md:flex">
-              <button
-                onClick={handleBuyNow}
-                className="bg-white w-[150px] text-black px-6 py-3 rounded-md text-sm font-medium"
-              >
-                {getButtonLabel(activeSlide.price)}
-              </button>
-
-              {activeSlide.price?.toLowerCase() !== "varies" && (
+              {/* Buttonlar — yalnız md və yuxarıda görünür */}
+              <div className="gap-3 hidden md:flex mt-4">
                 <button
-                  onClick={toggleWishlist}
-                  className={`flex items-center gap-1 text-sm px-4 py-2 rounded transition w-[150px] ${
-                    isInWishlist
-                      ? "bg-white/10 text-gray-300 hover:bg-white/20"
-                      : "text-white hover:bg-white/10"
-                  }`}
+                  onClick={handleBuyNow}
+                  className="bg-white w-[150px] text-black px-6 py-3 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
                 >
-                  {isInWishlist ? (
-                    <img src="/icons/check.png" alt="In Wishlist" className="w-5 h-5" />
-                  ) : (
-                    <span className="text-xl">＋</span>
-                  )}
-                  {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
+                  {getButtonLabel(activeSlide.price)}
                 </button>
-              )}
+
+                {activeSlide.price?.toLowerCase() !== "varies" && (
+                  <button
+                    onClick={toggleWishlist}
+                    className={`flex items-center gap-1 text-sm px-4 py-2 rounded transition w-[150px] ${
+                      isInWishlist
+                        ? "bg-white/10 text-gray-300 hover:bg-white/20"
+                        : "text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {isInWishlist ? (
+                      <img src="/icons/check.png" alt="In Wishlist" className="w-5 h-5" />
+                    ) : (
+                      <span className="text-xl">＋</span>
+                    )}
+                    {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -197,13 +270,16 @@ function Slider({ slides, games }) {
         {/* Thumbnail-lər */}
         <div
           className="mt-4 md:mt-0 md:w-[180px] flex flex-row md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-visible scrollbar-none"
-          style={{ scrollbarWidth: "none" }}
+          style={{ 
+            scrollbarWidth: "none",
+            height: `${slides.length * 88}px` // Match the big slider height
+          }}
         >
           {slides.map((slide, index) => (
             <button
               key={slide.id}
-              onClick={() => setActiveIndex(index)}
-              className={`relative flex items-center gap-3 p-3 md:p-4 rounded-lg text-left transition overflow-hidden z-10 min-w-[200px] md:min-w-0 ${
+              onClick={() => handleThumbnailClick(index)}
+              className={`relative flex items-center gap-3 p-3 md:p-4 rounded-lg text-left transition-all duration-300 overflow-hidden z-10 min-w-[200px] md:min-w-0 h-[84px] cursor-pointer ${
                 index === activeIndex
                   ? "bg-white/10"
                   : "hover:bg-white/5 text-white/80"
@@ -229,11 +305,17 @@ function Slider({ slides, games }) {
         <div
           className="w-full h-[440px] rounded-2xl overflow-hidden relative cursor-pointer"
           onClick={handleBuyNow}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <img
             src={activeSlide.mobImg}
             alt={activeSlide.title}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${
+              isAnimating ? 'mobile-slide-enter mobile-slide-enter-active' : ''
+            }`}
+            key={`mobile-${activeSlide.id}-${activeIndex}`}
           />
 
           {/* Wishlist ikon */}
@@ -254,12 +336,21 @@ function Slider({ slides, games }) {
           {/* Alt overlay yazılar */}
           <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90 to-transparent text-white">
             {activeSlide.logo && (
-              <img src={activeSlide.logo} alt={activeSlide.title} className="w-50 h-20" />
+              <img 
+                src={activeSlide.logo} 
+                alt={activeSlide.title} 
+                className={`w-50 h-20 mb-5 ${
+                  isAnimating ? 'mobile-content-enter mobile-content-enter-active' : ''
+                }`}
+                key={`mobile-logo-${activeSlide.id}-${activeIndex}`}
+              />
             )}
-            <p className="text-[9px] text-white uppercase my-2 font-bold">{activeSlide.subtitle}</p>
-            <h2 className="text-base font-semibold mb-1">{activeSlide.title}</h2>
-            <p className="text-sm opacity-90">{activeSlide.description}</p>
-            <p className="mt-2 text-sm font-semibold">{activeSlide.price}</p>
+            <div className={`${isAnimating ? 'mobile-content-enter mobile-content-enter-active' : ''}`}>
+              <p className="text-[9px] text-white uppercase my-2 font-bold">{activeSlide.subtitle}</p>
+              <h2 className="text-base font-semibold mb-1">{activeSlide.title}</h2>
+              <p className="text-sm opacity-90 mb-5">{activeSlide.description}</p>
+              <p className="mt-2 text-sm font-semibold">{activeSlide.price}</p>
+            </div>
           </div>
         </div>
 
@@ -268,8 +359,8 @@ function Slider({ slides, games }) {
           {slides.map((_, index) => (
             <button
               key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`w-2 h-2 rounded-full transition ${
+              onClick={() => handleThumbnailClick(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
                 index === activeIndex ? "bg-white" : "bg-gray-400/40"
               }`}
             />
