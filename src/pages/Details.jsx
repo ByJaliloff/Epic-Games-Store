@@ -456,7 +456,7 @@ function Details() {
   return (
     <div className="bg-[#0f0f10] min-h-screen">
       <SearchNav />
-      <div className="max-w-[95%] sm:max-w-[93%] md:max-w-[90%] lg:max-w-[85%] xl:max-w-[82%] mx-auto px-2 sm:px-4 lg:px-[3.5%] py-6 sm:py-8 text-white">
+      <div className="max-w-[90%] sm:max-w-[90%] md:max-w-[88%] lg:max-w-[85%] xl:max-w-[80%] 2xl:max-w-[75%] mx-auto  py-6 sm:py-8 text-white">
         <div className="flex flex-col">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-bold mb-2 leading-tight">{game.title}</h1>
           {activeTab === "overview" && (

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -216,10 +216,16 @@ function Card({ games = [], dlcs = [], loading, error }) {
     }
   };
 
-  if (loading) return <Loader />;
-  if (error || processingError) return <Error />;
+        if (loading || !Array.isArray(games) || !Array.isArray(dlcs)) {
+          return <Loader />;
+        }
 
-  const filtered = processGamesData();
+        if (error || processingError) {
+          return <Error />;
+        }
+
+
+    const filtered = useMemo(() => processGamesData(), [games, dlcs]);
 
   const handleSlide = (type, direction) => {
     setStartIndexes((prev) => {

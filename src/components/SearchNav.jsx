@@ -31,6 +31,25 @@ export default function SearchNav() {
     setQuery("");
   };
 
+  // Function to highlight matching text
+  const highlightText = (text, searchQuery) => {
+    if (!searchQuery.trim()) return text;
+    
+    const regex = new RegExp(`(${searchQuery.trim()})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="text-[#26BBFF] font-bold">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   useEffect(() => {
     if (query.trim().length > 0) {
       const allItems = [
@@ -172,10 +191,10 @@ export default function SearchNav() {
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="w-12 h-12 rounded object-cover mt-1"
+                      className="w-11 h-14 rounded object-cover"
                     />
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-400 mb-[2px]">
+                      <span className="text-xs text-[#ffffffa6] font-semibold mb-[2px] tracking-wider">
                         {item.type === "addon"
                           ? "Add-On"
                           : item.type === "edition"
@@ -186,8 +205,8 @@ export default function SearchNav() {
                           ? "Editor"
                           : "Base Game"}
                       </span>
-                      <span className="font-semibold text-sm leading-tight">
-                        {item.title}
+                      <span className="font-bold text-sm leading-tight text-[#ffffff] tracking-wider">
+                        {highlightText(item.title, query)}
                       </span>
                     </div>
                   </Link>
@@ -263,10 +282,10 @@ export default function SearchNav() {
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-12 h-12 rounded object-cover mt-1"
+                        className="w-9 h-12 rounded object-cover"
                       />
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-400 mb-[2px]">
+                        <span className="text-xs text-[#ffffffa6] font-semibold mb-[2px]">
                           {item.type === "addon"
                             ? "Add-On"
                             : item.type === "edition"
@@ -277,8 +296,8 @@ export default function SearchNav() {
                             ? "Editor"
                             : "Base Game"}
                         </span>
-                        <span className="font-semibold text-sm leading-tight">
-                          {item.title}
+                        <span className="font-bold text-sm leading-tight text-[#ffffff]">
+                          {highlightText(item.title, query)}
                         </span>
                       </div>
                     </Link>
