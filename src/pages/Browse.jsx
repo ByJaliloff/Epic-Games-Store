@@ -90,7 +90,7 @@ export default function Browse() {
 const filtered = useMemo(() => {
   return combined.filter((item) => {
     const title = item.title?.toLowerCase() || "";
-    const matchesQuery = searchQuery === "" || title.includes(searchQuery);
+    const matchesQuery = searchQuery === "" || title.includes(searchQuery.toLowerCase());
 
     const matchesGenre =
       filters.genre.length === 0 ||
