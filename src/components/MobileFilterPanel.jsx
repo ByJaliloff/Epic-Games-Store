@@ -105,7 +105,7 @@ export default function MobileFilterPanel({
   return (
     <div className="fixed inset-0 z-65 bg-[#18181C] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pt-10">
+      <div className="flex items-center justify-between p-[48px_44px_16px_44px]">
         <div className="flex items-center gap-3">
           <button onClick={onClose} className="p-1">
             <FiX className="w-6 h-6 text-white" />
