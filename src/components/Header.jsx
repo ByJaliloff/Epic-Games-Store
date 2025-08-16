@@ -371,12 +371,12 @@ function Header() {
           )}
 
           <a
-            href="https://store.epicgames.com/en-US/download"
-            className="bg-[#26bbff] text-black font-semibold text-sm px-3 py-1.5 rounded hover:bg-[#00aaff] transition"
-          >
-            Install
-          </a>
-
+          href="https://store.epicgames.com/en-US/download"
+          className="bg-[#26bbff] text-black font-semibold text-sm px-3 py-1.5 rounded hover:bg-[#00aaff] transition"
+        >
+          <span className="block md:hidden">Install</span> 
+          <span className="hidden md:block">Download</span>
+        </a>
           {/* Mobil menyu düyməsi */}
           <button
             className="md:hidden text-white text-2xl"

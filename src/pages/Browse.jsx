@@ -27,18 +27,27 @@ export default function Browse() {
 
   const combined = useMemo(() => [...games, ...dlcs], [games, dlcs]);
 
+  // 🟢 FIXED: Only show genres from base games (not DLC/Edition/Addon)
   const popularTags = useMemo(() => {
     const tagsMap = {};
-    combined.forEach((game) => {
+    
+    // Filter to only include base games (exclude DLC, Edition, Addon)
+    const baseGames = games.filter((game) => {
+      const type = game.type?.toLowerCase() || '';
+      return !['dlc', 'edition', 'addon'].includes(type);
+    });
+
+    baseGames.forEach((game) => {
+      // Only count genres, not features
       const genres = Array.isArray(game.genre) ? game.genre : [];
-      const features = Array.isArray(game.features) ? game.features : [];
-      [...genres, ...features].forEach((tag) => {
+      genres.forEach((tag) => {
         if (!tagsMap[tag]) tagsMap[tag] = 0;
         tagsMap[tag]++;
       });
     });
+    
     return Object.keys(tagsMap).filter((tag) => tagsMap[tag] >= 3);
-  }, [combined]);
+  }, [games]); // Only depend on games, not combined or dlcs
 
   const [highlightStart, setHighlightStart] = useState(0);
   const cardsPerPage = 4;
@@ -214,14 +223,16 @@ const filtered = useMemo(() => {
             </div>
             <div className="flex gap-4 overflow-x-auto scrollbar-hide mb-10 px-1">
               {popularTags.slice(highlightStart, highlightStart + cardsPerPage).map((label) => {
+                // 🟢 FIXED: Only get base games for display, not DLC/Edition/Addon
                 const relatedGames = Array.from(
                   new Map(
-                    combined
-                      .filter(
-                        (g) =>
-                          (Array.isArray(g.genre) && g.genre.includes(label)) ||
-                          (Array.isArray(g.features) && g.features.includes(label))
-                      )
+                    games // Use only games, not combined
+                      .filter((g) => {
+                        const type = g.type?.toLowerCase() || '';
+                        const isBaseGame = !['dlc', 'edition', 'addon'].includes(type);
+                        const hasGenre = Array.isArray(g.genre) && g.genre.includes(label);
+                        return isBaseGame && hasGenre;
+                      })
                       .map((g) => [g.id, g])
                   ).values()
                 ).slice(0, 3);
@@ -230,9 +241,10 @@ const filtered = useMemo(() => {
                   <div
                     key={label}
                     onClick={() => {
+                      // 🟢 FIXED: Set both genre filter and hide highlight
                       setFilters({
-                        genre: combined.some((g) => Array.isArray(g.genre) && g.genre.includes(label)) ? [label] : [],
-                        features: combined.some((g) => Array.isArray(g.features) && g.features.includes(label)) ? [label] : [],
+                        genre: [label], // Always set as genre since we're only showing genres
+                        features: [],
                         type: [],
                         platforms: [],
                         price: null,
@@ -327,7 +339,7 @@ const filtered = useMemo(() => {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onClose={() => setIsMobileFilterOpen(false)}
-              onApply={() => setIsMobileFilterOpen(false)}
+              onApply={() => setIsMobileFilterPanel(false)}
               onClear={() => setIsMobileFilterOpen(false)}
             />
           )}
