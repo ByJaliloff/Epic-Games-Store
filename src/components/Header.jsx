@@ -8,6 +8,7 @@ function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [epicMobileMenuOpen, setEpicMobileMenuOpen] = useState(false);
+  const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
 
   const { user, logout } = useContext(GameContext);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -18,7 +19,7 @@ function Header() {
 
   // Body scroll bloklama
   useEffect(() => {
-    if (isMobileMenuOpen || epicMobileMenuOpen) {
+    if (isMobileMenuOpen || epicMobileMenuOpen || isMobileAccountOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
@@ -26,7 +27,7 @@ function Header() {
     return () => {
       document.body.style.overflow = "auto";
     };
-  }, [isMobileMenuOpen, epicMobileMenuOpen]);
+  }, [isMobileMenuOpen, epicMobileMenuOpen, isMobileAccountOpen]);
 
   // Click outside bağlama - Only for user menu now
   useEffect(() => {
@@ -43,6 +44,7 @@ function Header() {
       if (window.innerWidth >= 768) {
         setIsMobileMenuOpen(false);
         setEpicMobileMenuOpen(false);
+        setIsMobileAccountOpen(false);
       }
     }
 
@@ -91,9 +93,13 @@ function Header() {
     setIsUserMenuOpen(false);
   };
 
+  const closeMobileAccount = () => {
+    setIsMobileAccountOpen(false);
+  };
+
   return (
     <header className="bg-[#131317] text-white h-[72px] shadow-md relative z-60">
-      <div className="max-w-[97%] mx-auto h-full flex items-center justify-between">
+      <div className="max-w-[95%] md:max-w-[97%] mx-auto h-full flex items-center justify-between">
         {/* Sol tərəf */}
         <div className="flex items-center space-x-6">
           {/* Epic logo + dropdown */}
@@ -381,6 +387,110 @@ function Header() {
         </div>
       </div>
 
+      {/* Mobile Account Dashboard */}
+      {isMobileAccountOpen && (
+        <div className="fixed inset-0 bg-[#131317] text-white z-50 animate-slideInDown flex flex-col">
+          {/* Top header */}
+          <div className="flex justify-between items-center px-4 h-[72px] bg-[#131317] flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <button onClick={closeMobileAccount} className="text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span className="text-lg font-medium">Back</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <button className="bg-[#26bbff] text-black font-semibold text-sm px-3 py-1.5 rounded hover:bg-[#00aaff] transition">
+                Install
+              </button>
+              <button onClick={closeMobileAccount} className="text-2xl hover:text-red-400 transition-colors duration-200">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Account section */}
+            <div className="mb-8">
+              <h1 className="text-[32px] font-bold mb-6">Account</h1>
+              
+              {/* User info */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 flex items-center justify-center bg-[#26bbff] text-black font-bold rounded-full text-xl">
+                  {user.firstName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-lg font-medium">{user.firstName}</span>
+              </div>
+            </div>
+
+            {/* Menu items */}
+            <div className="space-y-0">
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                My Achievements
+              </Link>
+              
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Epic Rewards
+              </Link>
+              
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Account Balance
+              </Link>
+              
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Coupons
+              </Link>
+
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Account
+              </Link>
+              
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Redeem Code
+              </Link>
+              
+              <Link 
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Redeem Fortnite Gift Card
+              </Link>
+
+              <Link 
+                to="/wishlist" 
+                onClick={closeMobileAccount}
+                className="block py-4 text-base font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200"
+              >
+                Wishlist
+              </Link>
+
+              <button
+                onClick={() => {
+                  logout();
+                  closeMobileAccount();
+                }}
+                className="w-full text-left py-4 text-base font-semibold text-red-500 font-semibold hover:bg-gray-800/30 rounded-md px-2 transition-colors duration-200 mb-8"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobil menyu overlay - With animations */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-[#101014] text-white z-50 p-4 pt-0 animate-slideInDown">
@@ -414,55 +524,17 @@ function Header() {
                 <FiGlobe className="w-5 h-5" />
               </button>
               {user ? (
-                <div className="relative" ref={userMenuRef}>
-                  <button
-                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                    className="md:hidden flex items-center gap-2 px-3 py-2 rounded hover:text-gray-300 transition"
-                  >
-                    <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black font-bold rounded-full">
-                      {user.firstName.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-sm font-semibold">
-                      {user.firstName}
-                    </span>
-                  </button>
-
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2 animate-fadeInDown">
-                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
-                        My Achievement
-                      </Link>
-                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
-                        Epic Rewards
-                      </Link>
-                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
-                        Account Balance
-                      </Link>
-                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
-                        Coupons
-                      </Link>
-                      <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200">
-                        Redeem Code
-                      </Link>
-                      <Link
-                        onClick={closeMobileMenu}
-                        to="/wishlist"
-                        className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md transition-all duration-200"
-                      >
-                        Wishlist
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          closeMobileMenu();
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-red-500 font-semibold text-base hover:bg-[#48484B] rounded-md transition-all duration-200"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsMobileAccountOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 rounded hover:text-gray-300 transition"
+                >
+                  <div className="w-8 h-8 flex items-center justify-center bg-[#26bbff] text-black font-bold rounded-full">
+                    {user.firstName.charAt(0).toUpperCase()}
+                  </div>
+                </button>
               ) : (
                 <Link
                   to="/signin"
