@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { GameContext } from "../context/DataContext";
 import GameCard from "../components/GameCard";
 import FilterPanel from "../components/FilterPanel";
+import MobileFilterPanel from "../components/MobileFilterPanel"; // Import the new mobile component
 import SearchNav from "../components/SearchNav";
 import Loader from "../components/Loader";
 
@@ -177,7 +178,19 @@ const filtered = useMemo(() => {
       setLoading(false);
     }
   }, [games, dlcs]);
+  
   const recommended = games.slice(0, 5);
+
+  // Get active filter count for mobile button
+  const getActiveFilterCount = () => {
+    let count = 0;
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) count += value.length;
+      else if (value !== null) count += 1;
+    });
+    if (searchQuery?.trim()) count += 1;
+    return count;
+  };
 
   if (loading) return  <Loader />
 
@@ -246,18 +259,40 @@ const filtered = useMemo(() => {
         {/* Main content */}
         <div className="w-[95%] md:w-[95%] lg:w-[93%] xl:w-[90%] 2xl:w-[82%] mx-auto px-[3.5%]">
           <div className="sm:hidden flex justify-end mb-4">
-            <button onClick={() => setIsMobileFilterOpen(true)} className="bg-[#1e1e1e] text-white px-4 py-2 rounded-lg shadow border border-white/10">
-              Filters
-            </button>
-          </div>
+                <button
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  className="relative bg-[#1e1e1e] text-white px-4 py-2 rounded-lg shadow border border-white/10 flex items-center gap-2"
+                >
+                  <span className="font-bold">Filters</span>
 
+                  {/* SVG icon sağda */}
+                  <svg
+                    aria-hidden="true"
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M2.25 5A.75.75 0 0 1 3 4.25h18a.75.75 0 0 1 0 1.5H3A.75.75 0 0 1 2.25 5m4 7a.75.75 0 0 1 .75-.75h10a.75.75 0 0 1 0 1.5H7a.75.75 0 0 1-.75-.75m4 7a.75.75 0 0 1 .75-.75h2a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1-.75-.75"
+                      clipRule="evenodd"
+                      fillRule="evenodd"
+                    />
+                  </svg>
+
+                  {getActiveFilterCount() > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-[#26BBFF] text-black text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+          </div>
           <div className="flex gap-8 pb-20">
             <div className="flex-1">
               {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center min-h-[300px]">
                   <h3 className="text-[50px] font-semibold text-center">No results found</h3>
                   <p className="text-gray-400 mt-2 text-center max-w-md">Unfortunately I could not find any results matching your search.</p>
-                  <div className="grid grid-cols-4 gap-4 mt-4 w-full">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full">
                     {recommended.map((game) => (
                       <GameCard key={game.id} game={game} />
                     ))}
@@ -272,6 +307,7 @@ const filtered = useMemo(() => {
               )}
             </div>
 
+            {/* Desktop Filter Panel */}
             <div className="w-[250px] sticky top-24 hidden md:block">
               <FilterPanel
                 filters={filters}
@@ -281,42 +317,20 @@ const filtered = useMemo(() => {
                 onFilterStatusChange={setShouldHideHighlight}
               />
             </div>
-
-            {isMobileFilterOpen && (
-              <div className="fixed inset-0 z-100 bg-[#18181C] bg-opacity-50 flex justify-center items-center">
-                <div className="w-full h-full bg-[#18181C] p-6 overflow-y-auto">
-                  <FilterPanel
-                    filters={filters}
-                    onFilterChange={setFilters}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    onFilterStatusChange={setShouldHideHighlight}
-                  />
-                  <div className="flex justify-evenly mt-6 gap-2">
-                    <button
-                      className="w-[116px] h-[48px]  bg-[#18181C] border border-white/10 text-white  rounded"
-                      onClick={() => {
-                        setFilters({
-                          genre: [],
-                          features: [],
-                          type: [],
-                          platforms: [],
-                          price: null,
-                        });
-                        setSearchQuery("");
-                        setIsMobileFilterOpen(false);
-                      }}
-                    >
-                      Clear
-                    </button>
-                    <button className="w-[116px] h-[48px]  bg-[#26BBFF] text-black font-semibold  rounded" onClick={() => setIsMobileFilterOpen(false)}>
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Mobile Filter Panel */}
+          {isMobileFilterOpen && (
+            <MobileFilterPanel
+              filters={filters}
+              onFilterChange={setFilters}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onClose={() => setIsMobileFilterOpen(false)}
+              onApply={() => setIsMobileFilterOpen(false)}
+              onClear={() => setIsMobileFilterOpen(false)}
+            />
+          )}
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-8">

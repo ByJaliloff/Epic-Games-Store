@@ -95,6 +95,8 @@ const resetFilters = () => {
       if (Array.isArray(value)) count += value.length;
       else if (value !== null) count += 1;
     });
+    // Add search query to count if it exists
+    if (searchQuery?.trim()) count += 1;
     return count;
     };
 

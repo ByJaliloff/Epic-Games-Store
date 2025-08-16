@@ -14,6 +14,7 @@ function Header() {
 
   const dropdownRef = useRef(null);
   const userMenuRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   // Body scroll bloklama
   useEffect(() => {
@@ -27,15 +28,9 @@ function Header() {
     };
   }, [isMobileMenuOpen, epicMobileMenuOpen]);
 
-  // Click outside bağlama - Fixed for user menu
+  // Click outside bağlama - Only for user menu now
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
-        setIsDropdownOpen(false);
-      }
       if (
         userMenuRef.current &&
         !userMenuRef.current.contains(event.target)
@@ -51,8 +46,8 @@ function Header() {
       }
     }
 
-    // Only add event listeners when menus are open
-    if (isDropdownOpen || isUserMenuOpen) {
+    // Only add event listeners when user menu is open
+    if (isUserMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     
@@ -62,7 +57,34 @@ function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
     };
-  }, [isDropdownOpen, isUserMenuOpen]); // Added dependencies
+  }, [isUserMenuOpen]);
+
+  // Hover handlers for Epic dropdown
+  const handleMouseEnter = () => {
+    if (window.innerWidth >= 768) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      setIsDropdownOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (window.innerWidth >= 768) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsDropdownOpen(false);
+      }, 150); // Small delay to prevent flickering
+    }
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -75,14 +97,18 @@ function Header() {
         {/* Sol tərəf */}
         <div className="flex items-center space-x-6">
           {/* Epic logo + dropdown */}
-          <div className="relative" ref={dropdownRef}>
+          <div 
+            className="relative" 
+            ref={dropdownRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               onClick={() => {
                 if (window.innerWidth < 768) {
                   setEpicMobileMenuOpen(true);
-                } else {
-                  setIsDropdownOpen((prev) => !prev);
                 }
+                // On desktop, don't handle click - only hover
               }}
               className="flex items-center space-x-1 p-[6px] rounded cursor-pointer"
             >
@@ -95,8 +121,15 @@ function Header() {
             </button>
 
             {/* Dropdown menyusu */}
-            {isDropdownOpen && (
-              <div className="absolute top-full left-1 mt-[2px] bg-gray-600/30 backdrop-blur-lg text-sm text-white rounded-xl shadow-lg w-[700px] grid grid-cols-2 p-6 gap-4 z-50">
+            {isDropdownOpen && window.innerWidth >= 768 && (
+              <div className="absolute top-full left-1 mt-[2px]  text-sm text-white rounded-xl shadow-lg w-[700px] grid grid-cols-2 p-6 gap-4 z-50"
+              style={{
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(32, 32, 36, 0.7)',
+                backdropFilter: 'blur(75px)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}>
                 <div className="grid grid-cols-1 gap-6">
                   <div className="border-b">
                     <h4 className="text-white font-bold mb-2 text-[20px]">Play</h4>
@@ -279,7 +312,14 @@ function Header() {
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-54 bg-gray-600/30 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden z-50 p-2">
+                <div className="absolute right-0 mt-2 w-54  rounded-xl  shadow-lg overflow-hidden z-50 p-2"
+                style={{
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(32, 32, 36, 0.7)',
+                backdropFilter: 'blur(75px)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}>
                   <Link className="block px-3 py-2.5 text-base hover:bg-[#48484B] rounded-md">
                     My Achievement
                   </Link>
@@ -326,9 +366,9 @@ function Header() {
 
           <a
             href="https://store.epicgames.com/en-US/download"
-            className="bg-[#26bbff] text-black font-semibold text-sm px-2 py-1.5 rounded hover:bg-[#00aaff] transition"
+            className="bg-[#26bbff] text-black font-semibold text-sm px-3 py-1.5 rounded hover:bg-[#00aaff] transition"
           >
-            Download
+            Install
           </a>
 
           {/* Mobil menyu düyməsi */}
@@ -355,9 +395,9 @@ function Header() {
             <div className="flex items-center gap-4">
               <a
                 href="https://store.epicgames.com/en-US/download"
-                className="bg-[#26bbff] text-black font-semibold text-sm px-2 py-1.5 rounded hover:bg-[#00aaff] w-fit transition"
+                className="bg-[#26bbff] text-black font-semibold text-sm px-3 py-1.5 rounded hover:bg-[#00aaff] w-fit transition"
               >
-                Download
+                Install
               </a>
               <button
                 className="text-2xl hover:text-red-400 transition-colors duration-200 transform hover:rotate-90"

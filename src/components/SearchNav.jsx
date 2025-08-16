@@ -40,7 +40,7 @@ export default function SearchNav() {
       const filtered = allItems.filter((item) =>
         item.title.toLowerCase().includes(query.toLowerCase())
       );
-      setFilteredResults(filtered.slice(0, 5)); // yalnız ilk 5 nəticə
+      setFilteredResults(filtered.slice(0, 4)); // Max 4 results for both mobile and desktop
       setShowDropdown(true);
     } else {
       setShowDropdown(false);
@@ -57,9 +57,26 @@ export default function SearchNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Add scroll event listener to close dropdown when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isOpen]);
+
   return (
     <div className="bg-[#0f0f10] sticky top-0 h-[80px] md:h-[100px] z-50">
-      <div className="px-[3.5%] py-4 flex items-center h-full justify-between max-w-[95%] md:max-w-[82%] mx-auto relative">
+      <div className="py-4 flex items-center h-full justify-between max-w-[90%] sm:max-w-[90%] md:max-w-[88%] lg:max-w-[85%] xl:max-w-[80%] 2xl:max-w-[75%] mx-auto relative">
         {/* Sol (search + nav links) */}
         <div className="flex items-center gap-6 relative flex-grow">
           {/* Search input */}
@@ -79,32 +96,12 @@ export default function SearchNav() {
           </div>
 
           {/* Mobile layout - Search icon positioned on the left */}
-          <div className="md:hidden flex items-center z-50">
+          <div className={`md:hidden flex items-center z-50 ${showMobileSearch ? 'hidden' : 'block'}`}>
             <FiSearch
               className="text-white text-xl cursor-pointer transition-transform duration-200 active:scale-95"
               onClick={toggleMobileSearch}
             />
           </div>
-
-          {/* Açılan mobil input – tam enli üst div */}
-          {showMobileSearch && (
-            <div className="absolute top-[-30px] left-0 w-full bg-[#202024] h-[80px] px-4 py-3 flex items-center z-50 animate-slideDown">
-              <FiSearch className="mr-2 text-white text-xl" />
-              <input
-                type="text"
-                placeholder="Search store"
-                className="bg-transparent outline-none placeholder-gray-400 text-white w-full text-sm"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                autoFocus
-              />
-              <IoClose
-                className="ml-2 text-white text-2xl cursor-pointer transition-transform duration-200 active:scale-95"
-                onClick={toggleMobileSearch}
-              />
-            </div>
-          )}
 
           {/* Nav links (Discover, Browse, News) */}
           <div className="hidden md:flex items-center gap-4 text-sm font-medium">
@@ -142,13 +139,18 @@ export default function SearchNav() {
             </Link>
           </div>
 
-          {/* Dropdown nəticələri */}
-          {showDropdown && (
+          {/* Desktop Dropdown nəticələri */}
+          {showDropdown && !showMobileSearch && (
             <div
               ref={dropdownRef}
-              className="absolute top-[50px] left-1/2 -translate-x-[41%] w-screen max-w-[500px]
-             md:translate-x-0 md:left-5 md:w-[600px] backdrop-blur-md bg-[#1e1e1fcc] 
-             rounded-xl shadow-xl z-40 overflow-hidden animate-slideDown"
+              className="hidden md:block absolute top-[50px] left-5 w-[600px] overflow-hidden animate-slideDown"
+              style={{
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(32, 32, 36, 0.7)',
+                backdropFilter: 'blur(75px)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}
             >
               <div className="px-4 pt-4 pb-1 text-[12px] text-gray-300 font-bold uppercase">
                 Top Results
@@ -205,8 +207,101 @@ export default function SearchNav() {
           )}
         </div>
 
+        {/* Açılan mobil input – tam enli üst div */}
+        {showMobileSearch && (
+          <>
+            <div className="absolute top-0 left-0 w-full bg-[#18181C] h-[80px] px-4 py-3 flex items-center z-[60] animate-slideDown">
+              <FiSearch className="mr-2 text-white text-xl" />
+              <input
+                type="text"
+                placeholder="Search store"
+                className="bg-transparent outline-none placeholder-gray-400 text-white w-full text-sm"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleSearch}
+                autoFocus
+              />
+              <IoClose
+                className="ml-2 text-white text-2xl cursor-pointer transition-transform duration-200 active:scale-95"
+                onClick={toggleMobileSearch}
+              />
+            </div>
+
+            {/* Mobile Dropdown nəticələri - positioned correctly */}
+            {showDropdown && (
+              <div
+                ref={dropdownRef}
+                className="absolute top-[80px] left-0 right-0 mx-4 z-[59] overflow-hidden animate-slideDown"
+                style={{
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(32, 32, 36, 0.7)',
+                  backdropFilter: 'blur(75px)',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                }}
+              >
+                <div className="px-4 pt-4 pb-1 text-[12px] text-gray-300 font-bold uppercase">
+                  Top Results
+                </div>
+
+                {filteredResults.length === 0 ? (
+                  <div className="text-gray-400 text-sm p-4">No results found</div>
+                ) : (
+                  filteredResults.map((item, index) => (
+                    <Link
+                      to={`/details/${item.id}`}
+                      key={item.id}
+                      onClick={() => {
+                        setShowDropdown(false);
+                        setShowMobileSearch(false);
+                      }}
+                      className="flex items-start gap-3 px-4 p-3 hover:bg-[#4E4548] transition-all duration-200 text-white active:bg-[#5E5558]"
+                      style={{
+                        animationDelay: `${index * 50}ms`,
+                      }}
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-12 h-12 rounded object-cover mt-1"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 mb-[2px]">
+                          {item.type === "addon"
+                            ? "Add-On"
+                            : item.type === "edition"
+                            ? "Edition"
+                            : item.type === "demo"
+                            ? "Demo"
+                            : item.type === "editor"
+                            ? "Editor"
+                            : "Base Game"}
+                        </span>
+                        <span className="font-semibold text-sm leading-tight">
+                          {item.title}
+                        </span>
+                      </div>
+                    </Link>
+                  ))
+                )}
+
+                <button
+                  className="w-full text-left text-gray-300 font-semibold text-sm px-4 py-2 pb-4 cursor-pointer hover:bg-[#4E4548] transition-all duration-200 active:bg-[#5E5558]"
+                  onClick={() => {
+                    navigate(`/browse?q=${encodeURIComponent(query)}`);
+                    setShowDropdown(false);
+                    setShowMobileSearch(false);
+                  }}
+                >
+                  View results →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
         {/* Mobile Navigation dropdown - Now centered between search and icons */}
-        <div className="flex md:hidden items-center justify-center absolute left-1/2 transform -translate-x-1/2">
+        <div className={`flex md:hidden items-center justify-center absolute left-1/2 transform -translate-x-1/2 ${showMobileSearch ? 'hidden' : 'block'}`}>
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -271,7 +366,7 @@ export default function SearchNav() {
         </div>
 
         {/* Mobile - Sağ (Wishlist, Cart icons) */}
-        <div className="flex md:hidden items-center space-x-4 text-xl text-gray-400">
+        <div className={`flex md:hidden items-center space-x-4 text-xl text-gray-400 ${showMobileSearch ? 'hidden' : 'flex'}`}>
           <Link
             to="/wishlist" 
             className="hover:text-white transition-all duration-200 active:scale-95"
