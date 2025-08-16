@@ -183,7 +183,7 @@ function Slider({ slides, games }) {
         }
       `}</style>
 
-      <div className="hidden md:flex flex-col md:flex-row gap-6 px-0 xl:px-[3.5%] py-6 max-w-[90%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[82%] mx-auto text-white">
+      <div className="hidden md:flex flex-col md:flex-row gap-6  py-6 max-w-[95%] sm:max-w-[90%] md:max-w-[88%] lg:max-w-[85%] xl:max-w-[80%] 2xl:max-w-[75%] mx-auto text-white">
         {/* Böyük slayd */}
         <div
           onClick={() => {
